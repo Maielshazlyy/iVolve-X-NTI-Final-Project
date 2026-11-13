@@ -20,6 +20,9 @@ crash.log
 vault-password-file
 inventory.ini
 
+# Local checkout used while importing the instructor-provided application
+/app/ivolve-source/
+
 # Local generated output
 out/
 *.log

@@ -10,7 +10,7 @@ Docker Compose will run the application and its database locally. Terraform will
 
 ## Repository structure
 
-- `app/` — application source linked from the project-provided repository as a pinned Git submodule
+- `app/` — instructor-provided application source, organized by service
 - `docker/` — Dockerfiles and local Docker Compose configuration
 - `terraform/` — reusable AWS infrastructure modules and environment configuration
 - `ansible/` — inventories, playbooks, and configuration roles
@@ -22,12 +22,6 @@ Docker Compose will run the application and its database locally. Terraform will
 Project implementation is in progress. Sections will be filled in and documented incrementally.
 
 ## Local application run
-
-Initialize the application source when cloning this repository:
-
-```bash
-git clone --recurse-submodules https://github.com/Maielshazlyy/iVolve-X-NTI-Final-Project.git
-```
 
 Create a local environment file from the example, then start the services:
 

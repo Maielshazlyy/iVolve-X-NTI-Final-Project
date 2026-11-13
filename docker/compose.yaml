@@ -18,7 +18,7 @@ services:
 
   auth-service:
     build:
-      context: ../app/ivolve-source/auth-service
+      context: ../app/auth-service
     restart: unless-stopped
     environment:
       DB_HOST: mysql
@@ -42,12 +42,12 @@ services:
 
   roadmap-service:
     build:
-      context: ../app/ivolve-source/roadmap-service
+      context: ../app/roadmap-service
     restart: unless-stopped
 
   frontend:
     build:
-      context: ../app/ivolve-source/frontend
+      context: ../app/frontend
     restart: unless-stopped
     environment:
       AUTH_SERVICE_URL: http://auth-service:5000
