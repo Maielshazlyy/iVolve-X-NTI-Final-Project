@@ -1,0 +1,25 @@
+# Application and editor files
+node_modules/
+.env
+.env.*
+!.env.example
+.idea/
+.vscode/
+
+# Terraform local state and secrets
+**/.terraform/*
+*.tfstate
+*.tfstate.*
+*.tfplan
+crash.log
+*.tfvars
+!*.tfvars.example
+
+# Ansible secrets and generated files
+*.retry
+vault-password-file
+inventory.ini
+
+# Local generated output
+out/
+*.log
