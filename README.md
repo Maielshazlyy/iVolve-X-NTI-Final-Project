@@ -159,10 +159,6 @@ The project is being completed incrementally. The application source and local C
 - Use Kubernetes Secrets for sensitive workload values and avoid placing real credentials in manifests.
 - Limit the GitHub Actions IAM role to the EKS access and AWS actions required by the deployment workflow.
 
-## Application source attribution
-
-The application files in `app/` were provided by the course instructor and originate from [Ibrahim-Adel15/iVolveFinalProject](https://github.com/Ibrahim-Adel15/iVolveFinalProject), revision `adda14701d9119b142a767fe1f1d6486e4a8f25a`. The service table above follows the actual source files and Dockerfiles: Auth is Flask/Python, and Roadmap is Spring Boot/Java.
-
 ## Status
 
 This is an active project. The local application and Compose setup are documented; Terraform, Ansible, Jenkins, Kubernetes, and GitHub Actions deployment files will be added and documented as they are implemented.
