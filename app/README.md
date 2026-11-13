@@ -1,6 +1,3 @@
-# Application source
-
-This folder contains the application files provided by the instructor. The original source repository is <https://github.com/Ibrahim-Adel15/iVolveFinalProject>, imported from revision `adda14701d9119b142a767fe1f1d6486e4a8f25a`.
 
 ## Services confirmed from the source files
 
