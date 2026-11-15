@@ -111,12 +111,34 @@ Edit `docker/.env` and replace the example passwords and session secret with loc
 
 Start the services from the repository root:
 
+Build the Spring Boot JAR in a temporary Maven container first. This avoids
+running Maven as a Docker build step on machines where Docker Desktop's build
+engine has an architecture or emulation issue:
+
+```powershell
+docker compose --profile build --env-file docker/.env -f docker/compose.yaml run --rm roadmap-builder
+```
+
+Then build and start the application containers:
+
 ```powershell
 docker compose --env-file docker/.env -f docker/compose.yaml up --build --detach
 docker compose --env-file docker/.env -f docker/compose.yaml ps
 ```
 
-Open [http://localhost:3000](http://localhost:3000), create a local account, and sign in to view the roadmap. Follow service logs with:
+For local Compose, the roadmap service uses `app/roadmap-service/Dockerfile.local`
+to package the JAR produced above. The regular multistage `Dockerfile` remains
+available for CI builds.
+
+Open [http://localhost:3000](http://localhost:3000), create a local account, and sign in to view the roadmap.
+
+The screenshot below shows the roadmap page running locally after sign-in. The account email is hidden for privacy.
+
+![Roadmap application running locally with Docker Compose](docs/images/docker-compose-roadmap.png)
+
+*Figure: The application roadmap served by the local Docker Compose stack.*
+
+To view service logs, run:
 
 ```powershell
 docker compose --env-file docker/.env -f docker/compose.yaml logs --follow

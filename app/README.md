@@ -115,4 +115,6 @@ app/
 
 Follow the root [README](../README.md#run-locally-with-docker-compose) for environment setup and Docker Compose commands. The Compose definition builds each service from its directory under `app/`.
 
+Component-specific notes are available in the [Frontend](frontend/README.md), [Auth service](auth-service/README.md), and [Roadmap service](roadmap-service/README.md) guides.
+
 The frontend uses an HTTP-only session cookie. Its default session store is suitable for the local learning environment; a multi-replica deployment should use a shared session store.

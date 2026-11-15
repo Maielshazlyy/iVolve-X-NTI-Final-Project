@@ -40,10 +40,20 @@ services:
       retries: 6
       start_period: 20s
 
+  roadmap-builder:
+    image: maven:3.9.11-eclipse-temurin-21
+    platform: linux/amd64
+    profiles: ["build"]
+    working_dir: /workspace
+    volumes:
+      - ../app/roadmap-service:/workspace
+    command: ["mvn", "-B", "clean", "package", "-DskipTests"]
+
   roadmap-service:
     platform: linux/amd64
     build:
       context: ../app/roadmap-service
+      dockerfile: Dockerfile.local
     restart: unless-stopped
 
   frontend:
