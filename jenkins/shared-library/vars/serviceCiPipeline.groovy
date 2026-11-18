@@ -23,7 +23,9 @@ def call(Map config = [:]) {
         }
 
         stages {
-            stage("Build and scan ${serviceName}") {
+            // Declarative Pipeline requires stage names to be string literals.
+            // The service is already visible in the Jenkins job name and logs.
+            stage('Build and scan') {
                 steps {
                     script {
                         buildAndScanImage(
@@ -35,7 +37,7 @@ def call(Map config = [:]) {
                 }
             }
 
-            stage("Push ${serviceName} to Amazon ECR") {
+            stage('Push to Amazon ECR') {
                 steps {
                     withCredentials([usernamePassword(
                         credentialsId: 'aws-ecr-push',
