@@ -1,6 +1,6 @@
 # Ansible Configuration
 
-This directory contains the Ansible configuration for the Terraform-managed Jenkins EC2 controller required by the project brief. It uses the `amazon.aws.aws_ec2` inventory plugin to discover the running instance by its `Project`, `Environment`, and `Name` tags.
+This directory contains the Ansible configuration for the Terraform-managed Jenkins EC2 controller required by the project brief. It uses the `amazon.aws.aws_ec2` inventory plugin to discover the running instance by its `Project`, `Environment`, and `Name` tags. The inventory-scoped connection and repository variables are in `inventory/group_vars/jenkins.yml` so Ansible loads them with both inventory and playbook commands.
 
 ## What the playbook configures
 
