@@ -74,10 +74,14 @@ def call(Map config = [:]) {
                 script {
                     def publishedImage = env.PUBLISHED_IMAGE ?: ''
                     def latestImage = publishedImage ? publishedImage.replaceFirst(/:[^:]+$/, ':latest') : ''
-                    sh(
-                        returnStatus: true,
-                        script: "docker image rm -f 'ivolve/${serviceName}:${env.IMAGE_TAG}' '${publishedImage}' '${latestImage}' >/dev/null 2>&1"
-                    )
+                    try {
+                        sh(
+                            returnStatus: true,
+                            script: "docker image rm -f 'ivolve/${serviceName}:${env.IMAGE_TAG}' '${publishedImage}' '${latestImage}' >/dev/null 2>&1"
+                        )
+                    } catch (err) {
+                        echo 'Skipped Docker image cleanup because the build agent workspace was unavailable.'
+                    }
                 }
                 echo "CI pipeline finished for ${serviceName}, build ${env.BUILD_NUMBER}."
             }
