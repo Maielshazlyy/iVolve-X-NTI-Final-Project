@@ -2,5 +2,6 @@
 
 serviceCiPipeline(
     serviceName: 'frontend',
-    context: 'app/frontend'
+    context: 'app/frontend',
+    manifestPath: 'kubernetes/base/frontend.yaml'
 )

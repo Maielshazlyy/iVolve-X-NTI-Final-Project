@@ -2,6 +2,13 @@ name: Deploy Dev to EKS
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - kubernetes/base/auth-service.yaml
+      - kubernetes/base/roadmap-service.yaml
+      - kubernetes/base/frontend.yaml
 
 permissions:
   contents: read
@@ -61,10 +68,8 @@ jobs:
       - name: Wait for MySQL storage and startup
         run: kubectl rollout status statefulset/mysql --namespace "$KUBERNETES_NAMESPACE" --timeout=600s
 
-      - name: Pull the latest Jenkins images
+      - name: Wait for application rollouts
         run: |
-          kubectl rollout restart deployment/auth-service deployment/roadmap-service deployment/frontend \
-            --namespace "$KUBERNETES_NAMESPACE"
           kubectl rollout status deployment/auth-service --namespace "$KUBERNETES_NAMESPACE" --timeout=300s
           kubectl rollout status deployment/roadmap-service --namespace "$KUBERNETES_NAMESPACE" --timeout=300s
           kubectl rollout status deployment/frontend --namespace "$KUBERNETES_NAMESPACE" --timeout=300s

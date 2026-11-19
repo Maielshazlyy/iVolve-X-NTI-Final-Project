@@ -4,14 +4,14 @@ This section provisions the cloud platform that will host the project. The plann
 
 ## Current status
 
-The development VPC, public and private subnets across two Availability Zones, internet routing, and a shared NAT Gateway have been created. The EKS cluster and managed worker nodes are deployed. The ECR module is implemented in Terraform configuration and is ready to plan; it has not been applied yet.
+The development VPC, public and private subnets across two Availability Zones, internet routing, a shared NAT Gateway, EKS cluster, managed worker nodes, ECR repositories, and Jenkins EC2 controller are deployed. Ansible configures Jenkins. Network ACL configuration and an S3 backend bootstrap are now in code; review and apply the ACL plan, then run the backend bootstrap and migrate the current state.
 
 ## Planned structure
 
 - `environments/dev/` — development stack composition, variables, and outputs; calls the network, EKS, and ECR modules.
-- `modules/network/` — implemented VPC, subnet, internet routing, and NAT resources.
+- `modules/network/` — VPC, subnet, internet routing, NAT, and public/private Network ACLs.
 - `modules/eks/` — EKS control plane, managed nodes, and access configuration.
 - `modules/ecr/` — private container image repositories with scan-on-push and image-retention settings.
 - `modules/jenkins/` — Jenkins EC2 resources and supporting IAM/security configuration.
 
-The development stack currently uses Terraform's local state because the S3 backend bootstrap is not implemented yet. Keep local state, credentials, private keys, and real `.tfvars` out of Git. Review `terraform plan` before any apply. EKS incurs cluster and worker-node charges, while the existing NAT Gateway also has hourly and data-processing charges.
+`bootstrap/state-backend/` creates a versioned, encrypted, private S3 bucket for state. The dev environment uses S3 native lock files and requires Terraform 1.10 or newer. Bootstrap remains on local state. Apply it first, then run `terraform init -migrate-state` from `environments/dev` to move the current local state safely. Keep local state, backend config files, credentials, private keys, and real `.tfvars` out of Git. Review the full `terraform plan` before applying Network ACL changes. S3 storage and request costs are usage-based; Network ACLs have no additional charge. EKS workers and the NAT Gateway continue to incur charges while running.

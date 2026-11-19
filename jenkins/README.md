@@ -1,97 +1,55 @@
-# Jenkins Continuous Integration
+# Jenkins CI
 
-This folder contains the Jenkins controller setup, the build agent definition, the pipeline, and the reusable Shared Library used by the project.
+Jenkins runs on the Terraform-managed EC2 controller. The `ivolve-build-agent` is a Docker container on the developer workstation and connects to that controller over WebSocket. The agent builds and scans images with Docker and Trivy, publishes them to ECR, updates its service manifest with the immutable build tag, and pushes the manifest change to GitHub. A GitHub Actions workflow deploys the changed manifest to EKS.
 
-## CI flow
+## Jobs and shared library
 
-1. Each Jenkins job checks out this repository and runs the service-specific Jenkinsfile on the `ivolve-build` agent.
-2. The selected service's Docker image is built and scanned with Trivy.
-3. Jenkins authenticates to Amazon ECR and pushes that service image with the Jenkins build number as its tag.
+Create three Jenkins Pipeline jobs using **Pipeline script from SCM**, the repository's `main` branch, and these script paths:
 
-There are three jobs, one per independently buildable service: `auth-service`, `roadmap-service`, and `frontend`. Each small Jenkinsfile passes its service name and build context to the same `serviceCiPipeline` Shared Library function. The image build, scan, and ECR push logic is therefore reused without coupling all three services to one build.
-
-The pipeline does not deploy to Kubernetes. The chosen deployment design assigns that work to GitHub Actions; the Kubernetes manifests and deployment workflow are separate project work.
-
-## Jenkins controller
-
-The controller Compose file is at the repository root. It exposes Jenkins only on localhost and persists Jenkins home in a named Docker volume:
-
-```powershell
-docker compose -f jenkins/compose.yaml up -d
-```
-
-Install these Jenkins plugins from **Manage Jenkins → Plugins**:
-
-- Pipeline
-- Git
-- Credentials Binding
-- Pipeline: Shared Groovy Libraries
-
-The inbound agent is defined in `agent.Dockerfile` and `agent.compose.yaml`. It includes Docker CLI, AWS CLI, and Trivy, and mounts the Docker Desktop engine socket for image builds. Keep the controller and agent running on the same Docker Desktop host so the agent can reach the controller at `host.docker.internal:8080`.
-
-To use the agent definition, create `jenkins/.env` locally (it is ignored by Git) with the secret shown on the Jenkins node page:
-
-```dotenv
-JENKINS_SECRET=paste-the-node-secret-here
-```
-
-Then start or rebuild the agent:
-
-```powershell
-docker compose --env-file jenkins/.env -f jenkins/agent.compose.yaml up -d --build
-```
-
-The Jenkins node must be named `ivolve-build-agent`, have label `ivolve-build`, use one executor, and use inbound/WebSocket launch. The agent image gets broad access to the local Docker engine through its socket; only run trusted pipeline code on this agent.
-
-## Configure the Shared Library
-
-In Jenkins, open **Manage Jenkins → System → Global Trusted Pipeline Libraries → Add** and enter:
-
-- **Name:** `ivolve-shared` (must match the `@Library` line in the Jenkinsfile)
-- **Default version:** `main`
-- **Retrieval method:** Modern SCM → Git
-- **Project Repository:** this repository's clone URL
-- **Library Path:** `jenkins/shared-library`
-
-The library path points Jenkins to the `vars/` folder nested under this project directory. Keep the name and path in sync with the Jenkinsfiles and repository layout.
-
-## Configure Amazon ECR credentials
-
-The current agent is on Docker Desktop, so it does not automatically receive the IAM instance profile attached to the separate EC2 Jenkins host. In Jenkins, add a **Username with password** credential:
-
-- **Username:** AWS access key ID for a dedicated least-privilege IAM identity
-- **Password:** that identity's AWS secret access key
-- **ID:** `aws-ecr-push`
-
-The identity needs permission to obtain an ECR login token and upload image layers/manifests to the three repositories under `ivolve-x/dev/` in `eu-north-1`. Do not put AWS keys in this repository, the Jenkinsfile, or the agent Compose file. For a durable setup, prefer an EC2-based agent with an IAM instance profile or another short-lived AWS credential flow over long-lived access keys.
-
-## Create the Pipeline job
-
-Create three Jenkins **Pipeline** jobs and configure each as **Pipeline script from SCM**. Use the same repository and branch for all three, and set each Script Path as follows:
-
-| Job name | Script Path |
+| Job | Script path |
 |---|---|
 | `ivolve-auth-service` | `jenkins/pipelines/auth-service.Jenkinsfile` |
 | `ivolve-roadmap-service` | `jenkins/pipelines/roadmap-service.Jenkinsfile` |
 | `ivolve-frontend` | `jenkins/pipelines/frontend.Jenkinsfile` |
 
-For each job, set **SCM** to Git, **Repository URL** to this repository's clone URL, and **Branch** to `*/main`.
+Configure the global trusted shared library:
 
-Save and run the job. The build needs the `ivolve-build` label, the configured Shared Library, the Docker socket, and the `aws-ecr-push` Jenkins credential.
+- **Name:** `ivolve-shared`
+- **Default version:** `main`
+- **SCM:** Git, this repository's clone URL
+- **Library path:** `jenkins/shared-library`
 
-## Files
+The agent node must be named `ivolve-build-agent`, use the `ivolve-build` label, one executor, inbound launch, and WebSocket transport.
 
-```text
-jenkins/
-├── pipelines/                  # One small Jenkinsfile per service/job
-│   ├── auth-service.Jenkinsfile
-│   ├── frontend.Jenkinsfile
-│   └── roadmap-service.Jenkinsfile
-├── agent.Dockerfile            # Agent tools: Docker CLI, AWS CLI, Trivy
-├── agent.compose.yaml          # Separate agent service; requires local secret
-└── shared-library/
-    └── vars/
-        ├── buildAndScanImage.groovy
-        ├── pushImageToEcr.groovy
-        └── serviceCiPipeline.groovy
+## Jenkins credentials
+
+Add these Jenkins credentials before running the full CI-to-deploy pipeline:
+
+| Credential ID | Kind | Contents |
+|---|---|---|
+| `aws-ecr-push` | Username with password | Dedicated AWS access key ID and secret access key with ECR push permissions for the three project repositories. |
+| `github-manifest-push` | Username with password | GitHub username and a fine-grained token limited to this repository with Contents read/write permission. Jenkins uses it only for the manifest commit. |
+
+Do not put either credential in Git, a Jenkinsfile, or the agent Compose file. Prefer short-lived AWS credentials when available. The GitHub token is only for Jenkins' manifest push. Separately, the organization SCP blocks GitHub OIDC for AWS deployment, so GitHub Actions currently uses the dedicated deploy IAM user's access keys stored as repository secrets.
+
+## Start the Docker build agent
+
+Copy `.env.example` to `.env`, then set `JENKINS_URL` to the EC2 controller URL and `JENKINS_SECRET` to the secret shown on the node page. The `.env` file is ignored by Git.
+
+```powershell
+Copy-Item jenkins/.env.example jenkins/.env
+# Edit jenkins/.env locally; do not paste the secret into chat or commit it.
+docker compose --env-file jenkins/.env -f jenkins/agent.compose.yaml up -d --build
 ```
+
+The agent mounts the Docker Desktop socket to build images. Only run trusted project pipelines on this agent. For a stable team setup, move the agent to a dedicated EC2 host and use an instance profile for ECR access.
+
+## CI and deployment behavior
+
+Each service pipeline builds and scans its image, pushes both the immutable Jenkins build-number tag and `latest` to ECR, updates only that service's Kubernetes manifest to the immutable tag, commits and pushes the manifest, and removes the local image references in the `post` cleanup.
+
+The `Deploy Dev to EKS` GitHub Actions workflow runs manually or when one of the three service manifests changes on `main`. It applies the Kubernetes overlay, updates the application Secret, and waits for MySQL and application rollouts. The workflow runs on the self-hosted GitHub runner on the Jenkins EC2 host, which can reach the private EKS API endpoint.
+
+## Local controller note
+
+The old Docker Desktop Jenkins controller is retained only as a rollback source during migration. The required project controller is Jenkins on EC2, configured by Ansible. Do not start both controllers against the same Jenkins home volume.

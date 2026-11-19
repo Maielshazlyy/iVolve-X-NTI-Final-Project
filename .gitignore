@@ -15,6 +15,7 @@ node_modules/
 crash.log
 *.tfvars
 !*.tfvars.example
+terraform/environments/dev/backend.hcl
 
 # Ansible secrets and generated files
 *.retry

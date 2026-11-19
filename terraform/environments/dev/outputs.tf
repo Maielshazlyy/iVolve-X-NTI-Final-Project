@@ -18,6 +18,14 @@ output "availability_zones" {
   value       = module.network.availability_zones
 }
 
+output "network_acl_ids" {
+  description = "Network ACL IDs assigned to the public and private subnets."
+  value = {
+    public  = module.network.public_network_acl_id
+    private = module.network.private_network_acl_id
+  }
+}
+
 output "eks_cluster_name" {
   description = "Name of the development EKS cluster."
   value       = module.eks.cluster_name

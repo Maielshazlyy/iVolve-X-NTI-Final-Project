@@ -164,18 +164,18 @@ The Compose file supplies service discovery addresses (`mysql`, `auth-service`, 
 
 ## Requirements progress
 
-This table tracks the NTI project brief. Argo CD was explicitly replaced with GitHub Actions by agreement; that substitution is reflected in the implementation and should be explained during the project review.
+This table tracks the requirements checklist recorded in this README; the original assignment sheet is not stored in the repository. Argo CD was explicitly replaced with GitHub Actions by agreement; explain that substitution during the project review.
 
 | Brief requirement | Status | Current implementation and remaining work |
 |---|---|---|
 | GitHub repository with README | Complete | The project repository and this README are in place. |
 | Docker Compose for the application and database | Complete | `docker/compose.yaml` defines the local application stack and is committed. |
-| Terraform Network, Server, EKS, and ECR modules | Partial | Modules provision the VPC, public/private subnets, Internet/NAT gateways, Jenkins EC2/security group, two EKS workers, and ECR repositories. The brief's dedicated Network ACL and S3 Terraform backend are not implemented yet; Terraform state currently uses the local backend. |
-| Ansible playbook, roles, and dynamic inventory for Jenkins | Implemented; pending run | `ansible/` now contains the AWS EC2 dynamic inventory, a Jenkins host playbook, and roles for Java 21, Jenkins LTS, Docker, and Trivy. Run the playbook against the Terraform-managed Jenkins EC2 instance and verify the service before marking this complete. |
+| Terraform Network, Server, EKS, and ECR modules | Implemented in code; pending backend migration and ACL apply | AWS VPC, subnets, routes, NAT, Jenkins EC2, EKS, and ECR resources are provisioned. Public/private Network ACLs and an encrypted/versioned S3 backend bootstrap are now in code. Apply the bootstrap, migrate the existing local state, then review and apply the complete ACL plan. |
+| Ansible playbook, roles, and dynamic inventory for Jenkins | Complete and verified | `ansible/` contains the AWS EC2 dynamic inventory, Jenkins host playbook, and roles for Java 21, Jenkins LTS, Docker, and Trivy. The playbook was rerun successfully with `changed=0` and `failed=0`. |
 | Kubernetes application and database resources | Complete and deployed | The `ivolve` overlay applies the app Deployments/Services, MySQL StatefulSet and headless Service, gp3 StorageClass/PVC, ConfigMap/Secret, and frontend Ingress. The Ingress provisions an internet-facing ALB. |
-| Jenkins CI pipeline for each service and Shared Library | Partial | Jenkinsfiles exist for the three services and use the shared library to build, scan with Trivy, and push images to ECR. The brief also asks for local image cleanup and automatic manifest update/push stages; those stages are not present yet. |
-| Argo CD continuous deployment | Replaced by GitHub Actions | The `Deploy Dev to EKS` workflow successfully applies the Kubernetes overlay and checks rollouts. It runs on the self-hosted runner. The organization SCP blocks GitHub OIDC provider creation, so the current workflow uses a dedicated IAM deploy user stored as GitHub secrets. This is a manual workflow run, not Argo CD's continuous reconciliation. |
-| Comprehensive documentation | In progress | This README documents the architecture and local setup. The requirement checklist is current; Ansible setup, Jenkins pipeline completion, Terraform backend/bootstrap, and final evidence still need documentation as they are implemented. |
+| Jenkins CI pipeline for each service and Shared Library | Implemented in the working tree; credential and run pending | All three previous builds passed on Jenkins EC2 through the connected Docker agent. The shared library now includes targeted local image cleanup and immutable image-tag updates to the service manifests, followed by a GitHub push. Add Jenkins credential `github-manifest-push` and rerun the pipelines to verify those new stages. |
+| Argo CD continuous deployment | Replaced by GitHub Actions | The `Deploy Dev to EKS` workflow successfully applied the Kubernetes overlay and checked rollouts on the self-hosted runner. The workflow now also has a push trigger for service-manifest changes. AWS Organizations blocks GitHub OIDC provider creation, so the workflow uses a dedicated IAM deploy user in repository secrets. This is event-driven deployment, not Argo CD's continuous reconciliation. |
+| Comprehensive documentation | In progress | Architecture, local setup, and stage guides are documented. Update final evidence after the newly added Jenkins manifest-push flow and Terraform S3 state migration/ACL deployment are completed. |
 
 ## Security practices
 
@@ -190,11 +190,12 @@ This table tracks the NTI project brief. Argo CD was explicitly replaced with Gi
 - The frontend, authentication, and roadmap pages were opened successfully through the ALB address. The roadmap content is static application data; it is not a user-editable list stored in MySQL.
 - The AWS Load Balancer Controller deployment is healthy, and the `frontend` Ingress has an ALB address.
 - The GitHub Actions deployment workflow completed successfully and reapplied the development manifests.
+- Jenkins now runs on the Terraform-managed EC2 host, its Docker-based build agent is connected, and the three service pipelines passed before the manifest-push stage was added.
 - Docker Desktop local runtime has experienced disk-space/daemon startup problems. The AWS deployment is separate from that local Docker issue.
 
 ## Remaining work
 
-1. Run the Ansible inventory and playbook against the Jenkins EC2 instance, then connect the project's Jenkins agent and verify the controller.
-2. Complete the missing Jenkins CI stages for image cleanup and manifest update/commit/push, then verify all three service pipelines.
-3. Add the Network ACL and bootstrap an S3 Terraform backend, then document the safe state migration.
-4. Finish setup/troubleshooting documentation and capture final project evidence.
+1. Add the repository-scoped Jenkins credential `github-manifest-push`; run all three pipelines and confirm each manifest push starts the GitHub Actions deployment.
+2. Apply `terraform/bootstrap/state-backend/`, then migrate the dev environment's local Terraform state to S3 and confirm a clean plan.
+3. Review and apply the public/private Network ACL changes, then confirm Jenkins access, ALB traffic, and EKS workloads remain healthy.
+4. Capture final evidence and update this checklist with the verified outcomes.

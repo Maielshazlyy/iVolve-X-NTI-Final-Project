@@ -30,6 +30,8 @@ terraform validate
 terraform plan
 ```
 
-The backend is local for now; S3 state storage is a later bootstrap task. `terraform plan` previews infrastructure changes. Review the resource counts and costs before `terraform apply`. The EKS API is public but restricted to the CIDR configured above; private access remains enabled for in-VPC clients.
+The S3 backend is configured as a partial backend in `versions.tf`. First apply `terraform/bootstrap/state-backend/` using its local state. Copy `backend.hcl.example` to the ignored `backend.hcl`, confirm the bucket name matches the bootstrap output, and from this directory run `terraform init -migrate-state -backend-config=backend.hcl`. Keep the original local `terraform.tfstate` as a recovery copy until the S3 state has been confirmed. Terraform 1.10 or newer is required for S3-native lock files.
+
+`terraform plan` previews infrastructure changes, including the public/private Network ACL associations. Network ACLs are stateless, so inspect all rules and the whole plan before applying to the live VPC; incorrect rules can interrupt the Jenkins UI/SSH, ALB, EKS nodes, and NAT egress. Review resource counts and costs before any apply. The EKS API is public but restricted to the configured CIDR; private access remains enabled for in-VPC clients.
 
 The GitHub Actions module configures a dedicated IAM user with `eks:DescribeCluster` and an EKS access entry scoped to the `ivolve` namespace. Create the IAM user `ivolve-x-dev-github-deployer` and its access key in IAM before planning. Add the key pair as repository secrets `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`. Create the `ivolve` namespace once with an administrator kubeconfig before running the GitHub access-check workflow.

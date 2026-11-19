@@ -6,7 +6,7 @@ services:
     container_name: ivolve-build-agent
     restart: unless-stopped
     environment:
-      JENKINS_URL: ${JENKINS_URL:-http://host.docker.internal:8080/}
+      JENKINS_URL: ${JENKINS_URL:?Set JENKINS_URL to the Jenkins controller URL}
       JENKINS_SECRET: ${JENKINS_SECRET:?Set JENKINS_SECRET in jenkins/.env}
       JENKINS_AGENT_NAME: ivolve-build-agent
       JENKINS_WEB_SOCKET: "true"

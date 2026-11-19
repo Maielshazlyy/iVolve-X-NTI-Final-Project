@@ -8,6 +8,7 @@ module "network" {
   public_subnet_cidrs  = var.public_subnet_cidrs
   private_subnet_cidrs = var.private_subnet_cidrs
   single_nat_gateway   = var.single_nat_gateway
+  trusted_admin_cidrs  = var.jenkins_admin_cidrs
 }
 
 module "eks" {

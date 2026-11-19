@@ -27,3 +27,13 @@ output "nat_gateway_ids" {
   description = "IDs of the NAT Gateways providing outbound access to private subnets."
   value       = aws_nat_gateway.this[*].id
 }
+
+output "public_network_acl_id" {
+  description = "Network ACL associated with the public subnets."
+  value       = aws_network_acl.public.id
+}
+
+output "private_network_acl_id" {
+  description = "Network ACL associated with the private subnets."
+  value       = aws_network_acl.private.id
+}

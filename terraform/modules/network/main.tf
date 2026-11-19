@@ -16,6 +16,8 @@ locals {
     Environment = var.environment
     ManagedBy   = "Terraform"
   }
+
+  trusted_admin_cidrs = sort(tolist(var.trusted_admin_cidrs))
 }
 
 resource "aws_vpc" "this" {
@@ -130,4 +132,145 @@ resource "aws_route_table_association" "private" {
   route_table_id = aws_route_table.private[
     var.single_nat_gateway ? 0 : count.index
   ].id
+}
+
+resource "aws_network_acl" "public" {
+  vpc_id     = aws_vpc.this.id
+  subnet_ids = aws_subnet.public[*].id
+
+  ingress {
+    rule_no    = 100
+    protocol   = "-1"
+    action     = "allow"
+    cidr_block = var.vpc_cidr
+    from_port  = 0
+    to_port    = 0
+  }
+
+  ingress {
+    rule_no    = 110
+    protocol   = "tcp"
+    action     = "allow"
+    cidr_block = "0.0.0.0/0"
+    from_port  = 80
+    to_port    = 80
+  }
+
+  dynamic "ingress" {
+    for_each = local.trusted_admin_cidrs
+    content {
+      rule_no    = 120 + (ingress.key * 2)
+      protocol   = "tcp"
+      action     = "allow"
+      cidr_block = ingress.value
+      from_port  = 22
+      to_port    = 22
+    }
+  }
+
+  dynamic "ingress" {
+    for_each = local.trusted_admin_cidrs
+    content {
+      rule_no    = 121 + (ingress.key * 2)
+      protocol   = "tcp"
+      action     = "allow"
+      cidr_block = ingress.value
+      from_port  = 8080
+      to_port    = 8080
+    }
+  }
+
+  ingress {
+    rule_no    = 160
+    protocol   = "tcp"
+    action     = "allow"
+    cidr_block = "0.0.0.0/0"
+    from_port  = 1024
+    to_port    = 65535
+  }
+
+  egress {
+    rule_no    = 100
+    protocol   = "-1"
+    action     = "allow"
+    cidr_block = var.vpc_cidr
+    from_port  = 0
+    to_port    = 0
+  }
+
+  egress {
+    rule_no    = 110
+    protocol   = "tcp"
+    action     = "allow"
+    cidr_block = "0.0.0.0/0"
+    from_port  = 80
+    to_port    = 80
+  }
+
+  egress {
+    rule_no    = 120
+    protocol   = "tcp"
+    action     = "allow"
+    cidr_block = "0.0.0.0/0"
+    from_port  = 443
+    to_port    = 443
+  }
+
+  egress {
+    rule_no    = 130
+    protocol   = "tcp"
+    action     = "allow"
+    cidr_block = "0.0.0.0/0"
+    from_port  = 1024
+    to_port    = 65535
+  }
+
+  tags = merge(local.common_tags, {
+    Name = "${var.project_name}-${var.environment}-public-nacl"
+  })
+}
+
+resource "aws_network_acl" "private" {
+  vpc_id     = aws_vpc.this.id
+  subnet_ids = aws_subnet.private[*].id
+
+  ingress {
+    rule_no    = 100
+    protocol   = "-1"
+    action     = "allow"
+    cidr_block = var.vpc_cidr
+    from_port  = 0
+    to_port    = 0
+  }
+
+  egress {
+    rule_no    = 100
+    protocol   = "-1"
+    action     = "allow"
+    cidr_block = var.vpc_cidr
+    from_port  = 0
+    to_port    = 0
+  }
+
+  egress {
+    rule_no    = 110
+    protocol   = "tcp"
+    action     = "allow"
+    cidr_block = "0.0.0.0/0"
+    from_port  = 80
+    to_port    = 80
+  }
+
+  egress {
+    rule_no    = 120
+    protocol   = "tcp"
+    action     = "allow"
+    cidr_block = "0.0.0.0/0"
+    from_port  = 443
+    to_port    = 443
+  }
+
+  tags = merge(local.common_tags, {
+    Name = "${var.project_name}-${var.environment}-private-nacl"
+  })
 }
