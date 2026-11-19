@@ -9,9 +9,12 @@ def call(Map config = [:]) {
 set -eu
 account_id=\$(aws sts get-caller-identity --query Account --output text)
 registry=\${account_id}.dkr.ecr.\${AWS_REGION}.amazonaws.com
-target=\${registry}/${config.repository}:${IMAGE_TAG}
-aws ecr get-login-password --region \"\${AWS_REGION}\" | docker login --username AWS --password-stdin \"\${registry}\"
-docker tag '${config.sourceImage}' \"\${target}\"
-docker push \"\${target}\"
+build_tag=\${registry}/${config.repository}:\${IMAGE_TAG}
+latest_tag=\${registry}/${config.repository}:latest
+aws ecr get-login-password --region "\${AWS_REGION}" | docker login --username AWS --password-stdin "\${registry}"
+docker tag '${config.sourceImage}' "\${build_tag}"
+docker push "\${build_tag}"
+docker tag '${config.sourceImage}' "\${latest_tag}"
+docker push "\${latest_tag}"
 """
 }

@@ -1,5 +1,5 @@
 # Terraform Environments
 
-Environment directories compose reusable Terraform modules with environment-specific inputs. The `dev/` environment is the planned first deployment target.
+Environment directories compose reusable Terraform modules with environment-specific inputs. The `dev/` environment is the first deployment target and currently composes the network module.
 
-No environment configuration has been added yet. Add backend configuration, provider settings, module calls, variables, and outputs here when the AWS infrastructure stage starts. Do not commit Terraform state or secret variable files.
+Future environments can reuse the same modules with different regions, CIDR ranges, and sizing. Add backend configuration and environment-specific values as those deployments are introduced. Do not commit Terraform state or secret variable files.

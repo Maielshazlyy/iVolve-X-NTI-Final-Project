@@ -1,17 +1,17 @@
 # AWS Infrastructure (Terraform)
 
-This section is reserved for provisioning the cloud platform that will host the project. The planned infrastructure includes a VPC and subnets, EKS, ECR repositories, a Jenkins host, and remote Terraform state in S3.
+This section provisions the cloud platform that will host the project. The planned infrastructure includes a VPC and subnets, EKS, ECR repositories, a Jenkins host, and remote Terraform state in S3.
 
 ## Current status
 
-The directory structure is prepared, but Terraform modules and environment configuration have not been implemented yet. No AWS infrastructure is created by the placeholder files in this directory.
+The development VPC, public and private subnets across two Availability Zones, internet routing, and a shared NAT Gateway have been created. The EKS cluster and managed worker nodes are deployed. The ECR module is implemented in Terraform configuration and is ready to plan; it has not been applied yet.
 
 ## Planned structure
 
-- `environments/dev/` — development stack composition, variables, and outputs.
-- `modules/network/` — VPC, routing, and subnet resources.
+- `environments/dev/` — development stack composition, variables, and outputs; calls the network, EKS, and ECR modules.
+- `modules/network/` — implemented VPC, subnet, internet routing, and NAT resources.
 - `modules/eks/` — EKS control plane, managed nodes, and access configuration.
-- `modules/ecr/` — container image repositories.
+- `modules/ecr/` — private container image repositories with scan-on-push and image-retention settings.
 - `modules/jenkins/` — Jenkins EC2 resources and supporting IAM/security configuration.
 
-When implementation begins, configure remote state and review the plan before applying. Keep state files, credentials, private keys, and real `.tfvars` out of Git.
+The development stack currently uses Terraform's local state because the S3 backend bootstrap is not implemented yet. Keep local state, credentials, private keys, and real `.tfvars` out of Git. Review `terraform plan` before any apply. EKS incurs cluster and worker-node charges, while the existing NAT Gateway also has hourly and data-processing charges.

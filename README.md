@@ -27,12 +27,12 @@ flowchart LR
     ECR --> Manifests[Update image tags in Kubernetes manifests]
     Manifests --> Git[Commit manifest change to GitHub]
     Git --> Actions[GitHub Actions deployment workflow]
-    Actions --> OIDC[AWS IAM role through OIDC]
-    OIDC --> EKS[Amazon EKS]
+    Actions --> IAMUser[Dedicated IAM deploy user<br/>repository secrets]
+    IAMUser --> EKS[Amazon EKS]
     EKS --> Rollout[Kubernetes rollout]
 ```
 
-Jenkins is responsible for CI: it builds and scans images, publishes them to ECR, and records the desired image tag in Git. A change to the Kubernetes manifests starts the GitHub Actions workflow, which authenticates to AWS through OIDC and applies the manifests to EKS. This keeps deployment credentials out of the repository and makes each deployment traceable to a Git commit.
+Jenkins is responsible for CI: it builds and scans images and publishes them to ECR. GitHub Actions is the selected deployment mechanism for EKS. The organization SCP currently blocks creation of the GitHub OIDC provider, so the temporary fallback is a dedicated IAM deploy user whose access keys are stored as repository secrets. The user is limited to the application namespace; OIDC remains the preferred option when the organization policy permits it.
 
 GitHub Actions performs deployment when a workflow runs. It does not provide Argo CD's continuous drift detection or automatic reconciliation between runs.
 
@@ -64,7 +64,7 @@ The frontend calls the Auth and Roadmap services over the internal container net
 | Infrastructure | AWS, Terraform, Amazon EKS, Amazon ECR, S3 |
 | Configuration | Ansible playbooks, roles, and dynamic inventory |
 | CI | Jenkins, a dedicated agent, Groovy Shared Library, Trivy |
-| Deployment | GitHub Actions, AWS IAM OIDC, Kubernetes |
+| Deployment | GitHub Actions, IAM deploy user, Kubernetes |
 
 ## Repository layout
 
@@ -167,20 +167,20 @@ The Compose file supplies service discovery addresses (`mysql`, `auth-service`, 
 The project is being completed incrementally. The application source and local Compose definition are in place; the AWS and deployment stages remain under development.
 
 1. **Local application:** run the services together and confirm the frontend, authentication, database, and roadmap flow.
-2. **AWS infrastructure:** create the VPC and subnets, EKS cluster and private worker nodes, Jenkins EC2 host, ECR repositories, and S3 Terraform backend.
+2. **AWS infrastructure:** the VPC and subnet Terraform configuration is in place for review; next create the VPC after reviewing the plan, then add EKS, ECR, a Jenkins EC2 host, and S3 Terraform state.
 3. **Jenkins host configuration:** use Ansible roles to install Java, Jenkins, Docker, and Trivy; configure Jenkins and its agent connection.
 4. **Kubernetes resources:** define the namespace, service Deployments and Services, MySQL StatefulSet and headless Service, storage, ConfigMaps, Secrets, and frontend Ingress.
 5. **Continuous integration:** use Jenkins and shared-library steps to test, build, scan, and push service images, then update the corresponding manifest image tags in Git.
-6. **Deployment:** use GitHub Actions with AWS OIDC to apply the updated Kubernetes configuration to EKS and verify the rollout.
+6. **Deployment:** use GitHub Actions to apply the Kubernetes configuration to EKS and verify the rollout. Prefer GitHub OIDC when the organization SCP permits it; the current fallback uses a dedicated IAM deploy user.
 7. **Documentation:** add setup instructions, architecture details, screenshots, and troubleshooting notes as each stage is completed.
 
 ## Security practices
 
 - Keep `docker/.env`, private SSH keys, AWS credentials, Terraform state, and real variable files out of Git.
-- Store deployment credentials in GitHub Actions secrets only when required; prefer short-lived AWS access through OIDC.
+- Prefer short-lived AWS access through OIDC. The current organization policy blocks provider creation, so the fallback uses a dedicated deploy-only IAM user in GitHub Actions secrets.
 - Use Kubernetes Secrets for sensitive workload values and avoid placing real credentials in manifests.
-- Limit the GitHub Actions IAM role to the EKS access and AWS actions required by the deployment workflow.
+- Limit the GitHub Actions IAM user to `eks:DescribeCluster` and namespace-scoped Kubernetes deployment access.
 
 ## Status
 
-This is an active project. The local application and Compose setup are documented; Terraform, Ansible, Jenkins, Kubernetes, and GitHub Actions deployment files will be added and documented as they are implemented.
+This is an active project. The local application and Compose setup are documented, and Terraform now defines the development VPC network. The VPC has not been created in AWS; EKS, ECR, Jenkins, Ansible, Kubernetes workloads, and the GitHub Actions deployment workflow remain future stages.
