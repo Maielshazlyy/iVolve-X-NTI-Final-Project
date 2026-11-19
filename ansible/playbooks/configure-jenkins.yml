@@ -21,6 +21,6 @@
 
   roles:
     - java
+    - jenkins
     - docker
     - trivy
-    - jenkins
