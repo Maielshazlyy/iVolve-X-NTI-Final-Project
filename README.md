@@ -162,17 +162,20 @@ docker compose --env-file docker/.env -f docker/compose.yaml down
 
 The Compose file supplies service discovery addresses (`mysql`, `auth-service`, and `roadmap-service`) inside the Docker network. These are container names, not host addresses.
 
-## Planned implementation stages
+## Requirements progress
 
-The project is being completed incrementally. The application source and local Compose definition are in place; the AWS and deployment stages remain under development.
+This table tracks the NTI project brief. Argo CD was explicitly replaced with GitHub Actions by agreement; that substitution is reflected in the implementation and should be explained during the project review.
 
-1. **Local application:** run the services together and confirm the frontend, authentication, database, and roadmap flow.
-2. **AWS infrastructure:** the VPC and subnet Terraform configuration is in place for review; next create the VPC after reviewing the plan, then add EKS, ECR, a Jenkins EC2 host, and S3 Terraform state.
-3. **Jenkins host configuration:** use Ansible roles to install Java, Jenkins, Docker, and Trivy; configure Jenkins and its agent connection.
-4. **Kubernetes resources:** define the namespace, service Deployments and Services, MySQL StatefulSet and headless Service, storage, ConfigMaps, Secrets, and frontend Ingress.
-5. **Continuous integration:** use Jenkins and shared-library steps to test, build, scan, and push service images, then update the corresponding manifest image tags in Git.
-6. **Deployment:** use GitHub Actions to apply the Kubernetes configuration to EKS and verify the rollout. Prefer GitHub OIDC when the organization SCP permits it; the current fallback uses a dedicated IAM deploy user.
-7. **Documentation:** add setup instructions, architecture details, screenshots, and troubleshooting notes as each stage is completed.
+| Brief requirement | Status | Current implementation and remaining work |
+|---|---|---|
+| GitHub repository with README | Complete | The project repository and this README are in place. |
+| Docker Compose for the application and database | Complete | `docker/compose.yaml` defines the local application stack and is committed. |
+| Terraform Network, Server, EKS, and ECR modules | Partial | Modules provision the VPC, public/private subnets, Internet/NAT gateways, Jenkins EC2/security group, two EKS workers, and ECR repositories. The brief's dedicated Network ACL and S3 Terraform backend are not implemented yet; Terraform state currently uses the local backend. |
+| Ansible playbook, roles, and dynamic inventory for Jenkins | Implemented; pending run | `ansible/` now contains the AWS EC2 dynamic inventory, a Jenkins host playbook, and roles for Java 21, Jenkins LTS, Docker, and Trivy. Run the playbook against the Terraform-managed Jenkins EC2 instance and verify the service before marking this complete. |
+| Kubernetes application and database resources | Complete and deployed | The `ivolve` overlay applies the app Deployments/Services, MySQL StatefulSet and headless Service, gp3 StorageClass/PVC, ConfigMap/Secret, and frontend Ingress. The Ingress provisions an internet-facing ALB. |
+| Jenkins CI pipeline for each service and Shared Library | Partial | Jenkinsfiles exist for the three services and use the shared library to build, scan with Trivy, and push images to ECR. The brief also asks for local image cleanup and automatic manifest update/push stages; those stages are not present yet. |
+| Argo CD continuous deployment | Replaced by GitHub Actions | The `Deploy Dev to EKS` workflow successfully applies the Kubernetes overlay and checks rollouts. It runs on the self-hosted runner. The organization SCP blocks GitHub OIDC provider creation, so the current workflow uses a dedicated IAM deploy user stored as GitHub secrets. This is a manual workflow run, not Argo CD's continuous reconciliation. |
+| Comprehensive documentation | In progress | This README documents the architecture and local setup. The requirement checklist is current; Ansible setup, Jenkins pipeline completion, Terraform backend/bootstrap, and final evidence still need documentation as they are implemented. |
 
 ## Security practices
 
@@ -181,6 +184,17 @@ The project is being completed incrementally. The application source and local C
 - Use Kubernetes Secrets for sensitive workload values and avoid placing real credentials in manifests.
 - Limit the GitHub Actions IAM user to `eks:DescribeCluster` and namespace-scoped Kubernetes deployment access.
 
-## Status
+## Current deployment status
 
-This is an active project. The local application and Compose setup are documented, and Terraform now defines the development VPC network. The VPC has not been created in AWS; EKS, ECR, Jenkins, Ansible, Kubernetes workloads, and the GitHub Actions deployment workflow remain future stages.
+- The EKS cluster has two Ready worker nodes in private subnets, and the application workloads and MySQL PVC were observed healthy.
+- The frontend, authentication, and roadmap pages were opened successfully through the ALB address. The roadmap content is static application data; it is not a user-editable list stored in MySQL.
+- The AWS Load Balancer Controller deployment is healthy, and the `frontend` Ingress has an ALB address.
+- The GitHub Actions deployment workflow completed successfully and reapplied the development manifests.
+- Docker Desktop local runtime has experienced disk-space/daemon startup problems. The AWS deployment is separate from that local Docker issue.
+
+## Remaining work
+
+1. Run the Ansible inventory and playbook against the Jenkins EC2 instance, then connect the project's Jenkins agent and verify the controller.
+2. Complete the missing Jenkins CI stages for image cleanup and manifest update/commit/push, then verify all three service pipelines.
+3. Add the Network ACL and bootstrap an S3 Terraform backend, then document the safe state migration.
+4. Finish setup/troubleshooting documentation and capture final project evidence.

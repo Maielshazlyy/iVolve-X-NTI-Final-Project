@@ -1,5 +1,10 @@
 # Ansible Roles
 
-Roles will group related defaults, tasks, handlers, templates, and files into reusable units. Planned configuration includes Jenkins and its build agent prerequisites. This directory is currently a placeholder.
+The playbook uses four reusable roles:
 
-Keep sensitive values in Ansible Vault-encrypted variables and document required variables in each role when it is implemented.
+- `java` installs OpenJDK 21 and fontconfig for the Jenkins LTS service.
+- `docker` configures Docker's official Ubuntu apt repository, installs Docker Engine and Compose, enables the daemon, and adds the Jenkins service account to the Docker group.
+- `trivy` configures Aqua Security's official apt repository and installs Trivy.
+- `jenkins` configures the Jenkins LTS apt repository, installs Jenkins, starts it at boot, and waits for its local HTTP login endpoint.
+
+The Docker role restarts Jenkins after changing group membership so the service receives its updated group list. Roles contain no project credentials or private keys.

@@ -1,0 +1,35 @@
+---
+- name: Install Trivy repository prerequisites
+  ansible.builtin.apt:
+    name:
+      - ca-certificates
+      - gnupg
+      - wget
+    state: present
+    update_cache: true
+
+- name: Create keyrings directory for Trivy
+  ansible.builtin.file:
+    path: /usr/share/keyrings
+    state: directory
+    mode: "0755"
+
+- name: Download and dearmor the Trivy signing key
+  ansible.builtin.shell:
+    cmd: >-
+      wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key |
+      gpg --dearmor --yes -o /usr/share/keyrings/trivy.gpg
+    creates: /usr/share/keyrings/trivy.gpg
+
+- name: Configure Trivy apt repository
+  ansible.builtin.apt_repository:
+    repo: "{{ trivy_apt_repository }}"
+    filename: trivy
+    state: present
+    update_cache: true
+
+- name: Install Trivy
+  ansible.builtin.apt:
+    name: trivy
+    state: present
+    update_cache: true
