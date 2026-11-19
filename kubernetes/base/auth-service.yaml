@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: auth-service
-          image: 335452653010.dkr.ecr.eu-north-1.amazonaws.com/ivolve-x/dev/auth-service:latest
+          image: 335452653010.dkr.ecr.eu-north-1.amazonaws.com/ivolve-x/dev/auth-service:6
           imagePullPolicy: Always
           ports:
             - name: http
