@@ -2,7 +2,7 @@
 
 An end-to-end DevOps project that takes the IVOLVE training-roadmap application from local development to AWS. The repository contains the application, Docker Compose environment, Terraform infrastructure, Ansible host configuration, Jenkins CI pipelines, Kubernetes manifests, and GitHub Actions deployment workflow.
 
-> **Start here:** this file explains the whole project, the order to run it, how to verify each stage, and where to find the detailed guide for every major folder. Each project folder has its own `README.md` with folder-specific commands and expected results.
+> **Start here:** this file explains the project, its architecture, and the end-to-end run order. Each major component has one README at its top level (`app/README.md`, `ansible/README.md`, `jenkins/README.md`, and so on); each one covers the files and commands for its component. Subfolders do not have separate README files.
 
 ## Project at a glance
 
@@ -59,51 +59,23 @@ The assignment brief itself is not stored in this repository, so the checklist b
 | Ansible Jenkins configuration | Complete | Playbook recap reported `failed=0`, `unreachable=0`, and a later idempotency run with `changed=0`. See [`ansible/README.md`](ansible/README.md). |
 | Kubernetes application, MySQL storage, and ALB | Deployed | EKS nodes Ready, all four application/database pods Running, and frontend Ingress has an ALB address. See [`kubernetes/README.md`](kubernetes/README.md). |
 | Jenkins pipeline for all three services | Complete | User confirmed auth-service, roadmap-service, and frontend pipelines passed, including image build/scan/push and manifest update. See [`jenkins/README.md`](jenkins/README.md). |
-| GitHub Actions deployment | Complete | User confirmed the workflow succeeded after service manifest updates; it applies the dev overlay and waits for rollouts. See [`.github/workflows/README.md`](.github/workflows/README.md). |
-| Project demo video | Ready | Screenshot-free, logo-led 67-second landscape and 55-second vertical explainers are available in [`docs/demo/README.md`](docs/demo/README.md). |
+| GitHub Actions deployment | Complete | User confirmed the workflow succeeded after service manifest updates; it applies the dev overlay and waits for rollouts. See [`.github/README.md`](.github/README.md). |
+| Project demo video | Ready | Logo-led landscape and vertical explainers, with and without explanation panels, are available in [`docs/README.md`](docs/README.md). |
 
 ## Repository and README guide
 
-Every major folder has a dedicated README. Use this index to jump directly to commands and expected outputs for a project stage.
+There is one detailed README for each major component folder. Each guide brings together the relevant subfolder structure, setup steps, commands, and expected output.
 
 | Folder | What it contains | Folder guide |
 |---|---|---|
 | `app/` | Frontend, Auth API, Roadmap API | [`app/README.md`](app/README.md) |
-| `app/frontend/` | Express UI, routes, views, and static assets | [`app/frontend/README.md`](app/frontend/README.md) |
-| `app/auth-service/` | Flask authentication API | [`app/auth-service/README.md`](app/auth-service/README.md) |
-| `app/roadmap-service/` | Spring Boot roadmap API | [`app/roadmap-service/README.md`](app/roadmap-service/README.md) |
 | `docker/` | Local Compose stack, env template, service health checks | [`docker/README.md`](docker/README.md) |
 | `terraform/` | AWS infrastructure and Terraform state management | [`terraform/README.md`](terraform/README.md) |
-| `terraform/bootstrap/` | Backend bootstrap roots that run before an environment backend exists | [`terraform/bootstrap/README.md`](terraform/bootstrap/README.md) |
-| `terraform/bootstrap/state-backend/` | One-time S3 backend bucket bootstrap | [`terraform/bootstrap/state-backend/README.md`](terraform/bootstrap/state-backend/README.md) |
-| `terraform/environments/dev/` | Live development environment composition | [`terraform/environments/dev/README.md`](terraform/environments/dev/README.md) |
-| `terraform/modules/` | Reusable network, EKS, ECR, Jenkins, and deploy-access modules | [`terraform/modules/README.md`](terraform/modules/README.md) |
-| `terraform/modules/network/` | VPC, subnets, NAT, routes, and stateless ACLs | [`terraform/modules/network/README.md`](terraform/modules/network/README.md) |
-| `terraform/modules/eks/` | EKS control plane, managed nodes, access, and add-ons | [`terraform/modules/eks/README.md`](terraform/modules/eks/README.md) |
-| `terraform/modules/ecr/` | Private repositories for service images | [`terraform/modules/ecr/README.md`](terraform/modules/ecr/README.md) |
-| `terraform/modules/jenkins/` | Jenkins EC2 host, role, and security group | [`terraform/modules/jenkins/README.md`](terraform/modules/jenkins/README.md) |
-| `terraform/modules/github-actions/` | IAM/EKS access for the deploy workflow | [`terraform/modules/github-actions/README.md`](terraform/modules/github-actions/README.md) |
 | `ansible/` | Dynamic AWS inventory and Jenkins configuration | [`ansible/README.md`](ansible/README.md) |
-| `ansible/inventory/` | EC2 discovery filters and connection settings | [`ansible/inventory/README.md`](ansible/inventory/README.md) |
-| `ansible/inventory/group_vars/` | Jenkins SSH and role configuration variables | [`ansible/inventory/group_vars/README.md`](ansible/inventory/group_vars/README.md) |
-| `ansible/playbooks/` | Jenkins host configuration entry point | [`ansible/playbooks/README.md`](ansible/playbooks/README.md) |
-| `ansible/roles/` | Reusable Java, Docker, Trivy, and Jenkins roles | [`ansible/roles/README.md`](ansible/roles/README.md) |
-| `ansible/roles/{java,docker,trivy,jenkins}/` | Role behavior and verification commands | Each role folder has a `README.md`. |
 | `jenkins/` | Controller/agent setup, pipeline definitions, shared library | [`jenkins/README.md`](jenkins/README.md) |
-| `jenkins/pipelines/` | One Jenkinsfile per application service | [`jenkins/pipelines/README.md`](jenkins/pipelines/README.md) |
-| `jenkins/shared-library/` | Reusable CI stages and helper steps | [`jenkins/shared-library/README.md`](jenkins/shared-library/README.md) |
-| `jenkins/shared-library/vars/` | Individual callable Groovy pipeline steps | [`jenkins/shared-library/vars/README.md`](jenkins/shared-library/vars/README.md) |
 | `kubernetes/` | Shared manifests, dev overlay, storage, and Ingress | [`kubernetes/README.md`](kubernetes/README.md) |
-| `kubernetes/base/` | Deployments, Services, MySQL, Secret/ConfigMap references, Ingress | [`kubernetes/base/README.md`](kubernetes/base/README.md) |
-| `kubernetes/overlays/` | Environment-specific Kustomize overlays | [`kubernetes/overlays/README.md`](kubernetes/overlays/README.md) |
-| `kubernetes/overlays/dev/` | The deployed `ivolve` namespace configuration | [`kubernetes/overlays/dev/README.md`](kubernetes/overlays/dev/README.md) |
 | `.github/` | GitHub repository automation | [`.github/README.md`](.github/README.md) |
-| `.github/workflows/` | EKS deployment and access-check workflows | [`.github/workflows/README.md`](.github/workflows/README.md) |
-| `docs/` | Architecture, screenshot evidence, and video plan | [`docs/README.md`](docs/README.md) |
-| `docs/demo/` | Video storyboard, narration draft, and export plan | [`docs/demo/README.md`](docs/demo/README.md) |
-| `docs/images/evidence/` | Final real screenshots for project proof | [`docs/images/evidence/README.md`](docs/images/evidence/README.md) |
-
-Some small implementation folders (for example `src/`, `views/`, and `public/`) contain source files rather than independent operating procedures; their parent service README explains them.
+| `docs/` | Architecture diagram, demo videos, covers, and generation assets | [`docs/README.md`](docs/README.md) |
 
 ## Quick start: local application
 
@@ -149,7 +121,7 @@ For logs, health checks, and troubleshooting see [`docker/README.md`](docker/REA
 - EKS Pod Identity resources for the EBS CSI and AWS Load Balancer controllers.
 - A versioned, encrypted, private S3 bucket used for the dev Terraform state. The bucket-bootstrap root retains its own local state.
 
-The deployed region is `eu-north-1`. Existing resource outputs and detailed commands are in [`terraform/environments/dev/README.md`](terraform/environments/dev/README.md).
+The deployed region is `eu-north-1`. Environment outputs, backend setup, module descriptions, and operating commands are in [`terraform/README.md`](terraform/README.md).
 
 ### Working with the existing deployment
 
@@ -163,9 +135,9 @@ terraform validate
 terraform plan
 ```
 
-The `backend.hcl` is intentionally ignored by Git; create it from `backend.hcl.example` on a fresh authorized workstation and use the account-specific bucket documented in the state-backend guide. AWS credentials must be active before Terraform can refresh remote resources. Keep the local pre-migration state file as a recovery copy until the S3 state is independently confirmed.
+The `backend.hcl` is intentionally ignored by Git; create it from `backend.hcl.example` on a fresh authorized workstation and set it to the project's S3 state bucket. AWS credentials must be active before Terraform can refresh remote resources. Keep the local pre-migration state file as a recovery copy until the S3 state is independently confirmed.
 
-For a new environment, first follow [`terraform/bootstrap/state-backend/README.md`](terraform/bootstrap/state-backend/README.md), then the development environment guide. Refresh administrator and Ansible-host IP allow-lists before planning. Always inspect the complete plan before applying live network changes.
+For a new environment, follow the bootstrap and dev-environment sections in [`terraform/README.md`](terraform/README.md). Refresh administrator and Ansible-host IP allow-lists before planning. Always inspect the complete plan before applying live network changes.
 
 ## Ansible: configure Jenkins EC2
 
@@ -209,7 +181,7 @@ Expected agent log includes `WebSocket connection open` and `Connected`. Exact J
 
 ## GitHub Actions deployment
 
-The deploy workflow is `.github/workflows/deploy-dev.yml`. It runs on `workflow_dispatch` or when one of the service manifests changes on `main`. The runner labels are `self-hosted`, `linux`, and `x64`. Configure repository Actions secrets for AWS deployment and the app/database configuration; use the exact names listed in [`.github/workflows/README.md`](.github/workflows/README.md).
+The deploy workflow is `.github/workflows/deploy-dev.yml`. It runs on `workflow_dispatch` or when one of the service manifests changes on `main`. The runner labels are `self-hosted`, `linux`, and `x64`. Configure repository Actions secrets for AWS deployment and app/database configuration; exact secret names and workflow behavior are in [`.github/README.md`](.github/README.md).
 
 The AWS Organization Service Control Policy blocks creation of the GitHub OIDC provider in this account. The current implementation therefore uses a dedicated IAM deploy user's access keys in repository secrets. Treat these as credentials, rotate/revoke them when appropriate, and never include their values in public evidence.
 
@@ -245,8 +217,7 @@ The architecture image is source-controlled, and the stage-by-stage explainer vi
 - [Watch or download the LinkedIn explainer](docs/demo/ivolve-devops-linkedin.mp4) (9:16, 55 seconds).
 - [Watch or download the clean GitHub/portfolio version without explanation panels](docs/demo/ivolve-devops-explainer-no-captions.mp4).
 - [Watch or download the clean LinkedIn version without explanation panels](docs/demo/ivolve-devops-linkedin-no-captions.mp4).
-- The video covers, subtitle files, clean versions, and regeneration instructions are in [`docs/demo/README.md`](docs/demo/README.md).
-- Optional screenshots for a separate evidence gallery are listed in [`docs/SCREENSHOT_CHECKLIST.md`](docs/SCREENSHOT_CHECKLIST.md); the videos do not use screenshots.
+- Video covers, captioned and clean versions, and regeneration instructions are in [`docs/README.md`](docs/README.md).
 
 [![GitHub video cover](docs/demo/ivolve-devops-explainer-cover.png)](docs/demo/ivolve-devops-explainer.mp4)
 

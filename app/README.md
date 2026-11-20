@@ -111,10 +111,17 @@ app/
     └── src/main/
 ```
 
+The frontend's `server.js` defines browser routes and backend URLs; `views/` holds the EJS pages and `public/` holds static CSS, JavaScript, and the IVOLVE/NTI marks. The Auth API entry point is `auth-service/app.py`; its `requirements.txt` defines Flask and database dependencies. The Roadmap API is a Maven/Spring Boot service under `roadmap-service/src/main/`; its `pom.xml` declares Java dependencies and its controller returns the roadmap JSON.
+
 ## Run the application
 
-Follow the root [README](../README.md#run-locally-with-docker-compose) for environment setup and Docker Compose commands. The Compose definition builds each service from its directory under `app/`.
+The full local startup, environment-file setup, Docker Compose build, logs, and shutdown commands are in [`../docker/README.md`](../docker/README.md). From the repository root, the frontend is available at `http://localhost:3000`; the Auth API and Roadmap API stay private on the Compose network.
 
-Component-specific notes are available in the [Frontend](frontend/README.md), [Auth service](auth-service/README.md), and [Roadmap service](roadmap-service/README.md) guides.
+For focused local checks, confirm the Compose health checks and Auth API health endpoint:
 
-The frontend uses an HTTP-only session cookie. Its default session store is suitable for the local learning environment; a multi-replica deployment should use a shared session store.
+```powershell
+docker compose --env-file docker/.env -f docker/compose.yaml ps
+docker compose --env-file docker/.env -f docker/compose.yaml exec auth-service python -c "import urllib.request; r=urllib.request.urlopen('http://127.0.0.1:5000/health'); print(r.status, r.read().decode())"
+```
+
+Then open the frontend, create an account, sign in, and confirm the roadmap page loads. The Roadmap service returns data from the application and does not use MySQL. The frontend uses an HTTP-only session cookie; its default session store is suitable for this learning environment, while a multi-replica deployment should use a shared session store.

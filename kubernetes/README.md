@@ -11,9 +11,24 @@ Jenkins builds and scans each service image, publishes it to ECR, updates that s
 - `base/frontend-ingress.yaml` defines an internet-facing AWS Application Load Balancer Ingress routing HTTP traffic to the frontend ClusterIP Service.
 - The Ingress requires the AWS Load Balancer Controller, its EKS Pod Identity role/association, and tagged public subnets. The cluster administrator installs the controller; the GitHub deploy identity applies the namespaced Ingress.
 
+These subfolders are covered by this README: `base/` holds the MySQL StatefulSet/headless Service, ConfigMap, app Deployments/Services, ingress, and the separate cluster-scoped `storageclass.yaml`; `overlays/dev/` selects the ECR images and the already-existing `ivolve` namespace for the deployed development stack. Jenkins updates service image tags in `base/`; GitHub Actions applies `overlays/dev/`.
+
 ## Development deployment
 
 Run the relevant Jenkins service job. Its manifest push triggers **Deploy Dev to EKS** automatically; the workflow can also be run manually. MySQL data is stored on an encrypted 5 GiB `gp3` EBS volume. The StorageClass uses `Delete` reclaim policy, so deleting the MySQL PVC deletes its EBS volume.
+
+For a manual cluster-admin deployment or diagnosis, first confirm the intended EKS context, then apply the dev overlay and wait for all workloads:
+
+```powershell
+kubectl config current-context
+kubectl apply -k kubernetes/overlays/dev
+kubectl rollout status statefulset/mysql -n ivolve --timeout=600s
+kubectl rollout status deployment/auth-service -n ivolve --timeout=300s
+kubectl rollout status deployment/roadmap-service -n ivolve --timeout=300s
+kubectl rollout status deployment/frontend -n ivolve --timeout=300s
+```
+
+Routine delivery uses GitHub Actions instead; its deploy identity cannot create the namespace or other cluster-scoped resources.
 
 After the AWS Load Balancer Controller is installed, the deployment workflow applies the Ingress. Get the public URL with `kubectl get ingress -n ivolve`.
 
