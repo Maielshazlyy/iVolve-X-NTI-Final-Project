@@ -51,7 +51,7 @@ Developer change
 
 Terraform provisions AWS resources. Ansible configures the Jenkins EC2 host. These are setup/configuration stages; they are not run for every application image deployment.
 
-### Project walkthrough video — no captions
+### Project walkthrough video 
 
 The landscape walkthrough below has no captions or transcript. Select its cover to open the MP4.
 
