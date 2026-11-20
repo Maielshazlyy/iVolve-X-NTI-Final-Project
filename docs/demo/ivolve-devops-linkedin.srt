@@ -1,0 +1,43 @@
+1
+00:00:00,000 --> 00:00:04,950
+From a training application in source control to a live deployment on Amazon EKS.
+
+2
+00:00:04,950 --> 00:00:09,900
+The frontend handles signup, login, and the roadmap page. Auth and Roadmap APIs serve it, while MySQL stores user accounts.
+
+3
+00:00:09,900 --> 00:00:14,850
+Docker Compose starts the frontend, APIs, and MySQL together with configured networking, environment values, and health checks.
+
+4
+00:00:14,850 --> 00:00:19,800
+Terraform provisions a VPC across two Availability Zones, public and private subnets, EKS, ECR, Jenkins EC2, and encrypted S3 state.
+
+5
+00:00:19,800 --> 00:00:24,750
+Ansible discovers the Jenkins EC2 host and installs Java, Docker, Trivy, and Jenkins configuration through reusable roles.
+
+6
+00:00:24,750 --> 00:00:29,700
+Each Jenkins pipeline checks out the code, builds its service image on a Docker build agent, and runs a Trivy vulnerability scan.
+
+7
+00:00:29,700 --> 00:00:34,650
+Passing images are pushed to private ECR repositories. Jenkins updates the matching Kubernetes manifest with the new image tag and commits it.
+
+8
+00:00:34,650 --> 00:00:39,600
+The deployment workflow configures AWS and kubectl, applies the development overlay, waits for MySQL and application rollouts, and reports the deployed resources.
+
+9
+00:00:39,600 --> 00:00:44,550
+The EKS cluster runs the frontend, Auth API, Roadmap API, and MySQL StatefulSet. The EBS CSI driver provisions the gp3 database volume.
+
+10
+00:00:44,550 --> 00:00:49,500
+The AWS Load Balancer Controller creates an Application Load Balancer. It routes browser traffic to the frontend, which calls the APIs inside the cluster.
+
+11
+00:00:49,500 --> 00:00:54,900
+Together, Terraform, Ansible, Jenkins, Trivy, ECR, Kubernetes, and GitHub Actions create a repeatable path from a code change to the live training roadmap.

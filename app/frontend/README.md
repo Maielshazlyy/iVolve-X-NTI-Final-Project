@@ -20,3 +20,13 @@ The frontend is a Node.js and Express web application. It renders the signup/log
 ## Run
 
 Use the full local stack from the repository root as documented in [`docker/README.md`](../../docker/README.md). The frontend container is built from the `Dockerfile` in this directory.
+
+From the repository root, after creating `docker/.env` and building the Maven JAR:
+
+```powershell
+docker compose --env-file docker/.env -f docker/compose.yaml up --build --detach
+docker compose --env-file docker/.env -f docker/compose.yaml ps
+Invoke-WebRequest http://localhost:3000/ -UseBasicParsing | Select-Object StatusCode
+```
+
+Expected result: the frontend is `Up` and the HTTP request returns status `200`. Open `http://localhost:3000`, sign up with a local demo account, log in, and check that the roadmap renders. Frontend logs are available with `docker compose --env-file docker/.env -f docker/compose.yaml logs --tail 50 frontend`.

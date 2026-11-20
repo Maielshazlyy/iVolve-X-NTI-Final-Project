@@ -5,7 +5,7 @@ Creates an Amazon EKS control plane and a managed EC2 worker group in the privat
 ## Resources and access
 
 - Creates separate IAM roles for the EKS control plane and worker nodes.
-- Uses the currently latest EKS Kubernetes version exposed by the AWS provider data source.
+- Uses the EKS Kubernetes version selected by the environment's supported-version data source. EKS add-on versions are pinned to the deployed, verified versions (`eks-pod-identity-agent` `v1.5.0-eksbuild.3`; `aws-ebs-csi-driver` `v1.68.0-eksbuild.1`) so unrelated Terraform applies do not silently upgrade them.
 - Enables private and public Kubernetes API access. The public endpoint is restricted to the CIDRs provided by the environment; use your current public IPv4 address with `/32`.
 - Allows the Jenkins-hosted GitHub Actions runner to reach the private Kubernetes API endpoint over TCP 443 using a security-group reference.
 - Installs the EKS Pod Identity Agent and Amazon EBS CSI add-ons. A dedicated Pod Identity role scopes EBS permissions to the CSI controller without requiring an IAM OIDC provider.

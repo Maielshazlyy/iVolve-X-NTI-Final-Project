@@ -1,201 +1,272 @@
-# IVOLVE × NTI Cloud DevOps Project
+# IVOLVE × NTI Cloud DevOps Platform
 
-An end-to-end cloud delivery project for the IVOLVE microservices application. It brings together local containers, AWS infrastructure, configuration management, Jenkins-based continuous integration, Kubernetes, and GitHub Actions deployment.
+An end-to-end DevOps project that takes the IVOLVE training-roadmap application from local development to AWS. The repository contains the application, Docker Compose environment, Terraform infrastructure, Ansible host configuration, Jenkins CI pipelines, Kubernetes manifests, and GitHub Actions deployment workflow.
 
-> **Deployment choice:** this implementation uses GitHub Actions to deploy to Amazon EKS. The project brief names Argo CD; GitHub Actions is used here in its place, so the cluster is updated by workflow runs rather than by a continuously reconciling GitOps controller.
+> **Start here:** this file explains the whole project, the order to run it, how to verify each stage, and where to find the detailed guide for every major folder. Each project folder has its own `README.md` with folder-specific commands and expected results.
 
-## Project goals
+## Project at a glance
 
-- Run the application and MySQL locally with Docker Compose.
-- Provision a reproducible AWS environment with Terraform.
-- Configure the Jenkins host with reusable Ansible roles.
-- Build, scan, and publish service images through Jenkins.
-- Keep Kubernetes manifests in Git and deploy their changes to EKS through GitHub Actions.
-- Document the architecture, setup, operating steps, and evidence for each stage.
+The application has three services and a database:
 
-## Architecture
+| Component | Technology | Responsibility |
+|---|---|---|
+| Frontend | Node.js, Express, EJS | Login/signup pages and roadmap UI |
+| Auth API | Python, Flask, MySQL connector | Registers users and validates passwords |
+| Roadmap API | Java 21, Spring Boot | Returns roadmap topics as JSON |
+| Database | MySQL 8 | Persists user accounts for the Auth API |
 
-### Delivery workflow
+The project demonstrates these outcomes:
 
-```mermaid
-flowchart LR
-    Dev[Application change] --> Repo[GitHub source repository]
-    Repo --> Jenkins[Jenkins on EC2<br/>dedicated agent and shared library]
-    Jenkins --> Test[Test and build service images]
-    Test --> Scan[Trivy image scan]
-    Scan --> ECR[Amazon ECR]
-    ECR --> Manifests[Update image tags in Kubernetes manifests]
-    Manifests --> Git[Commit manifest change to GitHub]
-    Git --> Actions[GitHub Actions deployment workflow]
-    Actions --> IAMUser[Dedicated IAM deploy user<br/>repository secrets]
-    IAMUser --> EKS[Amazon EKS]
-    EKS --> Rollout[Kubernetes rollout]
-```
+1. Run the complete application locally with Docker Compose.
+2. Provision the AWS network, Jenkins host, EKS cluster, ECR repositories, and Terraform state backend with Terraform.
+3. Configure the Jenkins EC2 host with Ansible.
+4. Build and scan each service image with Jenkins and Trivy, publish it to ECR, and update its Kubernetes manifest in Git.
+5. Deploy manifest changes to EKS with GitHub Actions and verify the application through an AWS Application Load Balancer.
 
-Jenkins is responsible for CI: it builds and scans images and publishes them to ECR. GitHub Actions is the selected deployment mechanism for EKS. The organization SCP currently blocks creation of the GitHub OIDC provider, so the temporary fallback is a dedicated IAM deploy user whose access keys are stored as repository secrets. The user is limited to the application namespace; OIDC remains the preferred option when the organization policy permits it.
+## Full architecture
 
-GitHub Actions performs deployment when a workflow runs. It does not provide Argo CD's continuous drift detection or automatic reconciliation between runs.
+![Full IVOLVE DevOps project architecture](docs/images/ivolve-platform-architecture.png)
 
-### Application services
+The architecture diagram is also available as an editable vector at [`docs/images/ivolve-platform-architecture.svg`](docs/images/ivolve-platform-architecture.svg). The PNG is ready for presentation slides and LinkedIn posts.
 
-```mermaid
-flowchart LR
-    Browser[Browser] --> Frontend[Frontend<br/>Node.js / Express :3000]
-    Frontend --> Auth[Auth service<br/>Flask :5000]
-    Frontend --> Roadmap[Roadmap service<br/>Spring Boot :8080]
-    Auth --> MySQL[(MySQL :3306)]
-```
-
-| Service | Technology | Port | Responsibility |
-|---|---|---:|---|
-| Frontend | Node.js, Express, EJS | 3000 | Login, signup, and roadmap pages |
-| Auth service | Python, Flask | 5000 | Signup and login API; persists user accounts |
-| Roadmap service | Java 21, Spring Boot | 8080 | Serves roadmap data through an API |
-| Database | MySQL 8 | 3306 | Stores authentication data for the Auth service |
-
-The frontend calls the Auth and Roadmap services over the internal container network. Only the frontend port is published to the host for local development. The Auth service creates its `users` table when it connects to the database.
-
-## Technology
-
-| Area | Tools |
-|---|---|
-| Application | Node.js, Express, EJS, Python, Flask, Java 21, Spring Boot, MySQL |
-| Containers | Docker, Docker Compose |
-| Infrastructure | AWS, Terraform, Amazon EKS, Amazon ECR, S3 |
-| Configuration | Ansible playbooks, roles, and dynamic inventory |
-| CI | Jenkins, a dedicated agent, Groovy Shared Library, Trivy |
-| Deployment | GitHub Actions, IAM deploy user, Kubernetes |
-
-## Repository layout
+### Delivery flow
 
 ```text
-.
-├── app/
-│   ├── auth-service/          # Flask authentication API
-│   ├── frontend/              # Express and EJS web application
-│   └── roadmap-service/       # Spring Boot roadmap API
-├── docker/
-│   ├── compose.yaml            # Local multi-service environment
-│   └── .env.example            # Local configuration template
-├── terraform/
-│   ├── modules/                # Network, EKS, Jenkins, and ECR modules
-│   └── environments/dev/       # Development environment composition
-├── ansible/
-│   ├── inventory/              # Static or dynamic inventory configuration
-│   ├── playbooks/              # Host configuration entry points
-│   └── roles/                  # Reusable Jenkins host setup
-├── jenkins/                    # Pipeline and shared-library integration
-├── kubernetes/
-│   ├── base/                   # Shared Kubernetes resources
-│   └── overlays/dev/           # Development environment settings
-├── .github/workflows/          # EKS deployment workflow
-└── docs/                       # Architecture, setup, and project evidence
+Developer change
+  → GitHub source repository
+  → Jenkins pipeline for the changed service
+  → Docker build and Trivy scan on the connected build agent
+  → Amazon ECR image tagged with the Jenkins build number
+  → Jenkins updates that service's Kubernetes manifest and pushes the commit
+  → GitHub Actions runs on the self-hosted runner on Jenkins EC2
+  → Kustomize applies the development manifests to Amazon EKS
+  → Kubernetes rolls out the new service image
+  → Browser reaches the frontend through the AWS ALB Ingress
 ```
 
-## Run locally with Docker Compose
+Terraform provisions AWS resources. Ansible configures the Jenkins EC2 host. These are setup/configuration stages; they are not run for every application image deployment.
 
-### Prerequisites
+### Important deployment requirement note
 
-- Docker Engine or Docker Desktop with Docker Compose v2.
-- Git, with this repository cloned locally.
+The assignment brief itself is not stored in this repository, so the checklist below reflects the project requirements recorded here. The current deployment workflow is GitHub Actions. The earlier project notes say Argo CD was named in the brief, but the deployed implementation uses event-driven GitHub Actions instead. GitHub Actions is **not** Argo CD and does not continuously reconcile cluster drift. If the grading rubric requires Argo CD specifically, treat that as an open requirement and confirm the accepted alternative with the instructor; do not describe the two tools as equivalent.
 
-### Start the application
+## Requirement and delivery status
 
-In PowerShell, create the local environment file:
+| Project area | Status | Evidence/verification |
+|---|---|---|
+| Application and Docker Compose | Complete | Local Compose stack and browser view documented in [`docker/README.md`](docker/README.md). |
+| Terraform network, Jenkins EC2, EKS, ECR, S3 backend | Deployed | S3 state migration completed; public/private ACLs applied; latest `terraform plan` returned no changes. See [`terraform/README.md`](terraform/README.md). |
+| Ansible Jenkins configuration | Complete | Playbook recap reported `failed=0`, `unreachable=0`, and a later idempotency run with `changed=0`. See [`ansible/README.md`](ansible/README.md). |
+| Kubernetes application, MySQL storage, and ALB | Deployed | EKS nodes Ready, all four application/database pods Running, and frontend Ingress has an ALB address. See [`kubernetes/README.md`](kubernetes/README.md). |
+| Jenkins pipeline for all three services | Complete | User confirmed auth-service, roadmap-service, and frontend pipelines passed, including image build/scan/push and manifest update. See [`jenkins/README.md`](jenkins/README.md). |
+| GitHub Actions deployment | Complete | User confirmed the workflow succeeded after service manifest updates; it applies the dev overlay and waits for rollouts. See [`.github/workflows/README.md`](.github/workflows/README.md). |
+| Project demo video | Ready | Screenshot-free, logo-led 67-second landscape and 55-second vertical explainers are available in [`docs/demo/README.md`](docs/demo/README.md). |
+
+## Repository and README guide
+
+Every major folder has a dedicated README. Use this index to jump directly to commands and expected outputs for a project stage.
+
+| Folder | What it contains | Folder guide |
+|---|---|---|
+| `app/` | Frontend, Auth API, Roadmap API | [`app/README.md`](app/README.md) |
+| `app/frontend/` | Express UI, routes, views, and static assets | [`app/frontend/README.md`](app/frontend/README.md) |
+| `app/auth-service/` | Flask authentication API | [`app/auth-service/README.md`](app/auth-service/README.md) |
+| `app/roadmap-service/` | Spring Boot roadmap API | [`app/roadmap-service/README.md`](app/roadmap-service/README.md) |
+| `docker/` | Local Compose stack, env template, service health checks | [`docker/README.md`](docker/README.md) |
+| `terraform/` | AWS infrastructure and Terraform state management | [`terraform/README.md`](terraform/README.md) |
+| `terraform/bootstrap/` | Backend bootstrap roots that run before an environment backend exists | [`terraform/bootstrap/README.md`](terraform/bootstrap/README.md) |
+| `terraform/bootstrap/state-backend/` | One-time S3 backend bucket bootstrap | [`terraform/bootstrap/state-backend/README.md`](terraform/bootstrap/state-backend/README.md) |
+| `terraform/environments/dev/` | Live development environment composition | [`terraform/environments/dev/README.md`](terraform/environments/dev/README.md) |
+| `terraform/modules/` | Reusable network, EKS, ECR, Jenkins, and deploy-access modules | [`terraform/modules/README.md`](terraform/modules/README.md) |
+| `terraform/modules/network/` | VPC, subnets, NAT, routes, and stateless ACLs | [`terraform/modules/network/README.md`](terraform/modules/network/README.md) |
+| `terraform/modules/eks/` | EKS control plane, managed nodes, access, and add-ons | [`terraform/modules/eks/README.md`](terraform/modules/eks/README.md) |
+| `terraform/modules/ecr/` | Private repositories for service images | [`terraform/modules/ecr/README.md`](terraform/modules/ecr/README.md) |
+| `terraform/modules/jenkins/` | Jenkins EC2 host, role, and security group | [`terraform/modules/jenkins/README.md`](terraform/modules/jenkins/README.md) |
+| `terraform/modules/github-actions/` | IAM/EKS access for the deploy workflow | [`terraform/modules/github-actions/README.md`](terraform/modules/github-actions/README.md) |
+| `ansible/` | Dynamic AWS inventory and Jenkins configuration | [`ansible/README.md`](ansible/README.md) |
+| `ansible/inventory/` | EC2 discovery filters and connection settings | [`ansible/inventory/README.md`](ansible/inventory/README.md) |
+| `ansible/inventory/group_vars/` | Jenkins SSH and role configuration variables | [`ansible/inventory/group_vars/README.md`](ansible/inventory/group_vars/README.md) |
+| `ansible/playbooks/` | Jenkins host configuration entry point | [`ansible/playbooks/README.md`](ansible/playbooks/README.md) |
+| `ansible/roles/` | Reusable Java, Docker, Trivy, and Jenkins roles | [`ansible/roles/README.md`](ansible/roles/README.md) |
+| `ansible/roles/{java,docker,trivy,jenkins}/` | Role behavior and verification commands | Each role folder has a `README.md`. |
+| `jenkins/` | Controller/agent setup, pipeline definitions, shared library | [`jenkins/README.md`](jenkins/README.md) |
+| `jenkins/pipelines/` | One Jenkinsfile per application service | [`jenkins/pipelines/README.md`](jenkins/pipelines/README.md) |
+| `jenkins/shared-library/` | Reusable CI stages and helper steps | [`jenkins/shared-library/README.md`](jenkins/shared-library/README.md) |
+| `jenkins/shared-library/vars/` | Individual callable Groovy pipeline steps | [`jenkins/shared-library/vars/README.md`](jenkins/shared-library/vars/README.md) |
+| `kubernetes/` | Shared manifests, dev overlay, storage, and Ingress | [`kubernetes/README.md`](kubernetes/README.md) |
+| `kubernetes/base/` | Deployments, Services, MySQL, Secret/ConfigMap references, Ingress | [`kubernetes/base/README.md`](kubernetes/base/README.md) |
+| `kubernetes/overlays/` | Environment-specific Kustomize overlays | [`kubernetes/overlays/README.md`](kubernetes/overlays/README.md) |
+| `kubernetes/overlays/dev/` | The deployed `ivolve` namespace configuration | [`kubernetes/overlays/dev/README.md`](kubernetes/overlays/dev/README.md) |
+| `.github/` | GitHub repository automation | [`.github/README.md`](.github/README.md) |
+| `.github/workflows/` | EKS deployment and access-check workflows | [`.github/workflows/README.md`](.github/workflows/README.md) |
+| `docs/` | Architecture, screenshot evidence, and video plan | [`docs/README.md`](docs/README.md) |
+| `docs/demo/` | Video storyboard, narration draft, and export plan | [`docs/demo/README.md`](docs/demo/README.md) |
+| `docs/images/evidence/` | Final real screenshots for project proof | [`docs/images/evidence/README.md`](docs/images/evidence/README.md) |
+
+Some small implementation folders (for example `src/`, `views/`, and `public/`) contain source files rather than independent operating procedures; their parent service README explains them.
+
+## Quick start: local application
+
+### Requirements
+
+- Docker Desktop running with the Linux container engine.
+- Git.
+- PowerShell 7 or Windows PowerShell.
+
+Run these commands from the repository root:
 
 ```powershell
 Copy-Item docker/.env.example docker/.env
+notepad docker/.env
 ```
 
-Edit `docker/.env` and replace the example passwords and session secret with local values. The file is ignored by Git; do not commit it.
+Set unique local-only values for `MYSQL_ROOT_PASSWORD`, `DB_USER`, `DB_PASSWORD`, and `SESSION_SECRET` in `docker/.env`. Keep this ignored file private.
 
-Start the services from the repository root:
-
-Build the Spring Boot JAR in a temporary Maven container first. This avoids
-running Maven as a Docker build step on machines where Docker Desktop's build
-engine has an architecture or emulation issue:
+Build the Spring Boot JAR in the Maven builder container, then build and start the application:
 
 ```powershell
 docker compose --profile build --env-file docker/.env -f docker/compose.yaml run --rm roadmap-builder
-```
-
-Then build and start the application containers:
-
-```powershell
 docker compose --env-file docker/.env -f docker/compose.yaml up --build --detach
 docker compose --env-file docker/.env -f docker/compose.yaml ps
 ```
 
-For local Compose, the roadmap service uses `app/roadmap-service/Dockerfile.local`
-to package the JAR produced above. The regular multistage `Dockerfile` remains
-available for CI builds.
-
-Open [http://localhost:3000](http://localhost:3000), create a local account, and sign in to view the roadmap.
-
-The screenshot below shows the roadmap page running locally after sign-in. The account email is hidden for privacy.
-
-![Roadmap application running locally with Docker Compose](docs/images/docker-compose-roadmap.png)
-
-*Figure: The application roadmap served by the local Docker Compose stack.*
-
-To view service logs, run:
-
-```powershell
-docker compose --env-file docker/.env -f docker/compose.yaml logs --follow
-```
-
-Stop the containers while keeping the MySQL volume:
+Open [http://localhost:3000](http://localhost:3000), create an account, sign in, and view the roadmap. To stop the stack while preserving MySQL data:
 
 ```powershell
 docker compose --env-file docker/.env -f docker/compose.yaml down
 ```
 
-### Local environment variables
+For logs, health checks, and troubleshooting see [`docker/README.md`](docker/README.md). The first Maven build can take several minutes. Do not use `down --volumes` unless you intentionally want to delete local database data.
 
-| Variable | Used by | Purpose |
+## AWS infrastructure and Terraform
+
+### What Terraform manages
+
+- VPC, public/private subnets in two Availability Zones, Internet Gateway, NAT Gateway, route tables, and public/private Network ACLs.
+- Jenkins controller EC2 instance, instance profile, ECR publishing permissions, and restricted admin access.
+- EKS control plane and private managed worker nodes.
+- ECR repositories for `frontend`, `auth-service`, and `roadmap-service`.
+- EKS Pod Identity resources for the EBS CSI and AWS Load Balancer controllers.
+- A versioned, encrypted, private S3 bucket used for the dev Terraform state. The bucket-bootstrap root retains its own local state.
+
+The deployed region is `eu-north-1`. Existing resource outputs and detailed commands are in [`terraform/environments/dev/README.md`](terraform/environments/dev/README.md).
+
+### Working with the existing deployment
+
+From PowerShell:
+
+```powershell
+Set-Location "C:\Users\Shazly\Documents\Codex\IVOLVE-X-NTI-Final-Project\terraform\environments\dev"
+terraform init -backend-config=backend.hcl
+terraform state list
+terraform validate
+terraform plan
+```
+
+The `backend.hcl` is intentionally ignored by Git; create it from `backend.hcl.example` on a fresh authorized workstation and use the account-specific bucket documented in the state-backend guide. AWS credentials must be active before Terraform can refresh remote resources. Keep the local pre-migration state file as a recovery copy until the S3 state is independently confirmed.
+
+For a new environment, first follow [`terraform/bootstrap/state-backend/README.md`](terraform/bootstrap/state-backend/README.md), then the development environment guide. Refresh administrator and Ansible-host IP allow-lists before planning. Always inspect the complete plan before applying live network changes.
+
+## Ansible: configure Jenkins EC2
+
+Run Ansible from the Ubuntu control host. The AWS EC2 inventory discovers the Jenkins controller by its project/environment/name tags. Store the SSH private key outside Git and load it into the current shell:
+
+```bash
+cd ~/iVolve-X-NTI-Final-Project/ansible
+export ANSIBLE_PRIVATE_KEY_FILE="$HOME/.ssh/lab28-ansible.pem"
+chmod 600 "$ANSIBLE_PRIVATE_KEY_FILE"
+ansible-inventory --graph
+ansible jenkins -m ping
+ansible-playbook playbooks/configure-jenkins.yml --syntax-check
+ansible-playbook playbooks/configure-jenkins.yml --ask-become-pass
+```
+
+Expected checks: inventory contains the Jenkins EC2 host; ping returns `"ping": "pong"`; syntax check prints the playbook name; successful recap shows `failed=0`. See [`ansible/README.md`](ansible/README.md) for control-host packages and dynamic inventory details.
+
+## Jenkins CI
+
+Jenkins controller: Terraform-managed EC2. Jenkins image builder: `ivolve-build-agent`, a Docker container connected over WebSocket. GitHub Actions runner: a separate self-hosted runner service on the Jenkins EC2 host. The two agents have different roles; the GitHub runner deploys to EKS, while the Docker build agent builds/scans images.
+
+Create three **Pipeline script from SCM** jobs on Jenkins, each pointing to `main` and the indicated Jenkinsfile:
+
+| Jenkins job | Script path | Service image/repository |
 |---|---|---|
-| `MYSQL_ROOT_PASSWORD` | MySQL | Local database administrator password |
-| `DB_NAME` | MySQL, Auth service | Application database name; defaults to `ivolve` |
-| `DB_USER` | MySQL, Auth service | Application database account |
-| `DB_PASSWORD` | MySQL, Auth service | Application database password |
-| `SESSION_SECRET` | Frontend | Signs the frontend session cookie |
+| `ivolve-frontend` | `jenkins/pipelines/frontend.Jenkinsfile` | `frontend` |
+| `ivolve-auth-service` | `jenkins/pipelines/auth-service.Jenkinsfile` | `auth-service` |
+| `ivolve-roadmap-service` | `jenkins/pipelines/roadmap-service.Jenkinsfile` | `roadmap-service` |
 
-The Compose file supplies service discovery addresses (`mysql`, `auth-service`, and `roadmap-service`) inside the Docker network. These are container names, not host addresses.
+Configure the trusted global Shared Library `ivolve-shared` from this repository, default branch `main`, library path `jenkins/shared-library`. Set up Jenkins credentials `aws-ecr-push` and `github-manifest-push` as described in [`jenkins/README.md`](jenkins/README.md). Never place secret values in pipeline files or screenshots.
 
-## Requirements progress
+For a local Docker build agent, copy `jenkins/.env.example` to the ignored `jenkins/.env`, fill in the controller URL and agent secret locally, then run:
 
-This table tracks the requirements checklist recorded in this README; the original assignment sheet is not stored in the repository. Argo CD was explicitly replaced with GitHub Actions by agreement; explain that substitution during the project review.
+```powershell
+docker compose --env-file jenkins/.env -f jenkins/agent.compose.yaml up -d --build
+docker ps --filter name=ivolve-build-agent
+docker logs --tail 30 ivolve-build-agent
+```
 
-| Brief requirement | Status | Current implementation and remaining work |
-|---|---|---|
-| GitHub repository with README | Complete | The project repository and this README are in place. |
-| Docker Compose for the application and database | Complete | `docker/compose.yaml` defines the local application stack and is committed. |
-| Terraform Network, Server, EKS, and ECR modules | Implemented in code; pending backend migration and ACL apply | AWS VPC, subnets, routes, NAT, Jenkins EC2, EKS, and ECR resources are provisioned. Public/private Network ACLs and an encrypted/versioned S3 backend bootstrap are now in code. Apply the bootstrap, migrate the existing local state, then review and apply the complete ACL plan. |
-| Ansible playbook, roles, and dynamic inventory for Jenkins | Complete and verified | `ansible/` contains the AWS EC2 dynamic inventory, Jenkins host playbook, and roles for Java 21, Jenkins LTS, Docker, and Trivy. The playbook was rerun successfully with `changed=0` and `failed=0`. |
-| Kubernetes application and database resources | Complete and deployed | The `ivolve` overlay applies the app Deployments/Services, MySQL StatefulSet and headless Service, gp3 StorageClass/PVC, ConfigMap/Secret, and frontend Ingress. The Ingress provisions an internet-facing ALB. |
-| Jenkins CI pipeline for each service and Shared Library | Implemented in the working tree; credential and run pending | All three previous builds passed on Jenkins EC2 through the connected Docker agent. The shared library now includes targeted local image cleanup and immutable image-tag updates to the service manifests, followed by a GitHub push. Add Jenkins credential `github-manifest-push` and rerun the pipelines to verify those new stages. |
-| Argo CD continuous deployment | Replaced by GitHub Actions | The `Deploy Dev to EKS` workflow successfully applied the Kubernetes overlay and checked rollouts on the self-hosted runner. The workflow now also has a push trigger for service-manifest changes. AWS Organizations blocks GitHub OIDC provider creation, so the workflow uses a dedicated IAM deploy user in repository secrets. This is event-driven deployment, not Argo CD's continuous reconciliation. |
-| Comprehensive documentation | In progress | Architecture, local setup, and stage guides are documented. Update final evidence after the newly added Jenkins manifest-push flow and Terraform S3 state migration/ACL deployment are completed. |
+Expected agent log includes `WebSocket connection open` and `Connected`. Exact Jenkins job setup, credentials, and verification are in [`jenkins/README.md`](jenkins/README.md).
 
-## Security practices
+## GitHub Actions deployment
 
-- Keep `docker/.env`, private SSH keys, AWS credentials, Terraform state, and real variable files out of Git.
-- Prefer short-lived AWS access through OIDC. The current organization policy blocks provider creation, so the fallback uses a dedicated deploy-only IAM user in GitHub Actions secrets.
-- Use Kubernetes Secrets for sensitive workload values and avoid placing real credentials in manifests.
-- Limit the GitHub Actions IAM user to `eks:DescribeCluster` and namespace-scoped Kubernetes deployment access.
+The deploy workflow is `.github/workflows/deploy-dev.yml`. It runs on `workflow_dispatch` or when one of the service manifests changes on `main`. The runner labels are `self-hosted`, `linux`, and `x64`. Configure repository Actions secrets for AWS deployment and the app/database configuration; use the exact names listed in [`.github/workflows/README.md`](.github/workflows/README.md).
 
-## Current deployment status
+The AWS Organization Service Control Policy blocks creation of the GitHub OIDC provider in this account. The current implementation therefore uses a dedicated IAM deploy user's access keys in repository secrets. Treat these as credentials, rotate/revoke them when appropriate, and never include their values in public evidence.
 
-- The EKS cluster has two Ready worker nodes in private subnets, and the application workloads and MySQL PVC were observed healthy.
-- The frontend, authentication, and roadmap pages were opened successfully through the ALB address. The roadmap content is static application data; it is not a user-editable list stored in MySQL.
-- The AWS Load Balancer Controller deployment is healthy, and the `frontend` Ingress has an ALB address.
-- The GitHub Actions deployment workflow completed successfully and reapplied the development manifests.
-- Jenkins now runs on the Terraform-managed EC2 host, its Docker-based build agent is connected, and the three service pipelines passed before the manifest-push stage was added.
-- Docker Desktop local runtime has experienced disk-space/daemon startup problems. The AWS deployment is separate from that local Docker issue.
+## Kubernetes and application verification
 
-## Remaining work
+Configure kubectl for the deployed cluster. In PowerShell, if `aws` is not on `PATH`, call the AWS CLI executable by full path:
 
-1. Add the repository-scoped Jenkins credential `github-manifest-push`; run all three pipelines and confirm each manifest push starts the GitHub Actions deployment.
-2. Apply `terraform/bootstrap/state-backend/`, then migrate the dev environment's local Terraform state to S3 and confirm a clean plan.
-3. Review and apply the public/private Network ACL changes, then confirm Jenkins access, ALB traffic, and EKS workloads remain healthy.
-4. Capture final evidence and update this checklist with the verified outcomes.
+```powershell
+$awsExe = "$env:LOCALAPPDATA\Programs\Amazon\AWSCLIV2\aws.exe"
+& $awsExe eks update-kubeconfig --name ivolve-x-dev --region eu-north-1
+kubectl config current-context
+kubectl get nodes
+kubectl get pods -n ivolve
+kubectl get deployments,statefulsets,services,pvc -n ivolve
+kubectl get ingress -n ivolve
+```
+
+Expected deployment health: EKS nodes report `Ready`, four `ivolve` pods report `Running`/ready, the MySQL PVC is `Bound`, and the frontend Ingress has an ALB `ADDRESS`. Open that current address with `http://` and test signup/login and the roadmap. The ALB DNS hostname can change; get it from `kubectl get ingress -n ivolve` rather than copying an old URL.
+
+After a deployment, verify the rollout:
+
+```powershell
+kubectl rollout status deployment/auth-service -n ivolve --timeout=300s
+kubectl rollout status deployment/roadmap-service -n ivolve --timeout=300s
+kubectl rollout status deployment/frontend -n ivolve --timeout=300s
+```
+
+## Evidence and demo
+
+The architecture image is source-controlled, and the stage-by-stage explainer videos are ready:
+
+- [Watch or download the GitHub/portfolio explainer](docs/demo/ivolve-devops-explainer.mp4) (16:9, 67 seconds).
+- [Watch or download the LinkedIn explainer](docs/demo/ivolve-devops-linkedin.mp4) (9:16, 55 seconds).
+- [Watch or download the clean GitHub/portfolio version without explanation panels](docs/demo/ivolve-devops-explainer-no-captions.mp4).
+- [Watch or download the clean LinkedIn version without explanation panels](docs/demo/ivolve-devops-linkedin-no-captions.mp4).
+- The video covers, subtitle files, clean versions, and regeneration instructions are in [`docs/demo/README.md`](docs/demo/README.md).
+- Optional screenshots for a separate evidence gallery are listed in [`docs/SCREENSHOT_CHECKLIST.md`](docs/SCREENSHOT_CHECKLIST.md); the videos do not use screenshots.
+
+[![GitHub video cover](docs/demo/ivolve-devops-explainer-cover.png)](docs/demo/ivolve-devops-explainer.mp4)
+
+[![LinkedIn video cover](docs/demo/ivolve-devops-linkedin-cover.png)](docs/demo/ivolve-devops-linkedin.mp4)
+
+## Security and cost notes
+
+- Never commit `.env` files, AWS access keys, GitHub tokens, SSH keys, Terraform state, or Jenkins agent secrets.
+- Redact account IDs, personal email addresses, tokens, and unrelated browser/desktop content from portfolio images.
+- AWS resources such as EKS control plane, EC2 workers/Jenkins, NAT Gateway, ALB, public IPv4, EBS volumes, ECR storage, and data transfer can incur ongoing charges. Check the AWS Billing page and stop/delete resources when the learning environment is no longer needed, following the Terraform state and data-retention guides.
+- MySQL uses an EBS-backed PVC with a `Delete` reclaim policy; deleting that claim deletes the backing EBS volume.
+
+## Project history and verified state
+
+- Jenkins builds and scans all three service images; the user confirmed all service pipelines and deployment workflow runs succeeded.
+- The Jenkins pipeline commits an immutable build-number image reference to the relevant Kubernetes service manifest; that GitHub push triggers the deploy workflow.
+- Terraform state is stored in the S3 backend; the latest reported plan was `No changes`.
+- Following Network ACL application, the user verified both EKS worker nodes `Ready`, the four application/database pods `Running`, and the ALB Ingress address present.
+- The application was opened through the ALB and the user confirmed it worked.
+
+## License and attribution
+
+This is an NTI training project. Application logos and course assets belong to their respective owners. Add a license only if the project owner has selected one.

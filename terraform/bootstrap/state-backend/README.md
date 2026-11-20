@@ -24,3 +24,14 @@ terraform init -migrate-state -backend-config=backend.hcl
 ```
 
 Confirm the state migration when Terraform prompts. Keep the local `terraform.tfstate` recovery copy until `terraform state list` works against the S3 backend and a fresh plan shows no unintended replacement or deletion. Do not commit `.tfstate`, backend metadata, or credentials. The bucket contains sensitive infrastructure state; only grant access to authorized Terraform operators. S3 incurs usage-based storage and request charges.
+
+## Deployed project backend
+
+The project bootstrap was applied successfully. Its output was:
+
+```text
+state_bucket_name = ivolve-x-tfstate-335452653010-eu-north-1
+state_key         = ivolve-x/dev/terraform.tfstate
+```
+
+The dev environment initialization reported `Successfully configured the backend "s3"`; after migration and the ACL apply, the user confirmed a fresh dev plan returned `No changes`. The bootstrap bucket's own state remains local in this directory by design.

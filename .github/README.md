@@ -1,8 +1,12 @@
-# GitHub Automation
+# GitHub Repository Automation
 
-GitHub Actions workflows live in [`workflows/`](workflows/). Jenkins builds, scans, and publishes the application images to ECR. GitHub Actions deploys those images to Amazon EKS using the self-hosted runner on the Jenkins EC2 host.
+This directory contains GitHub-specific automation. The exact workflow behavior, required repository secrets, triggers, and verification steps are documented in [`workflows/README.md`](workflows/README.md).
 
-- `eks-access-check.yml` verifies AWS and Kubernetes access in the `ivolve` namespace.
-- `deploy-dev.yml` creates the app Secret from repository secrets, applies the Kustomize overlay, and rolls out the latest images.
+## Quick workflow checks
 
-The organization SCP blocks creation of a GitHub OIDC provider, so these workflows use a dedicated IAM deploy user stored as repository Actions secrets. Keep credentials out of workflow files and application manifests. Rotate or revoke the access key when this fallback is no longer needed.
+1. Open the repository's **Actions** tab.
+2. Confirm **Deploy Dev to EKS** has a successful run after a Jenkins manifest commit.
+3. Open the run and check that the secret creation, manifest apply, MySQL wait, three deployment rollouts, and resource summary steps completed.
+4. Confirm the corresponding EKS rollout with the commands in [`../kubernetes/README.md`](../kubernetes/README.md).
+
+Workflow files should never print secret values. Credentials are configured as repository Actions secrets, not in YAML.

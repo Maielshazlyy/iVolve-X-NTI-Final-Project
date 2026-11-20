@@ -25,6 +25,8 @@ docker compose --env-file docker/.env -f docker/compose.yaml up --build --detach
 docker compose --env-file docker/.env -f docker/compose.yaml ps
 ```
 
+Expected result: MySQL and Auth service report healthy; frontend and Roadmap service report Up. Open `http://localhost:3000`, create a local demo account, sign in, and confirm the roadmap cards render. If a container is not healthy, use `docker compose --env-file docker/.env -f docker/compose.yaml logs --tail 100 <service>` with `mysql`, `auth-service`, `roadmap-service`, or `frontend`.
+
 The Maven builder writes the Spring Boot JAR into `app/roadmap-service/target`; Compose then packages it with `Dockerfile.local`. The normal multistage `Dockerfile` is retained for CI builds.
 
 View logs or stop the stack:

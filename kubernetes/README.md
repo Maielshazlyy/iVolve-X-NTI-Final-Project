@@ -1,6 +1,6 @@
 # Kubernetes Deployment
 
-Jenkins builds and scans each service image, then pushes both its Jenkins build-number tag and `latest` to ECR. The GitHub Actions `Deploy Dev to EKS` workflow applies the development Kustomize overlay and rolls the three application Deployments to the latest images.
+Jenkins builds and scans each service image, publishes it to ECR, updates that service's Kubernetes manifest to the selected Jenkins build-number image tag, and pushes the manifest change to GitHub. The GitHub Actions `Deploy Dev to EKS` workflow applies the development Kustomize overlay and waits for MySQL and all three application Deployment rollouts.
 
 ## Layout and behavior
 
@@ -13,7 +13,7 @@ Jenkins builds and scans each service image, then pushes both its Jenkins build-
 
 ## Development deployment
 
-Run all three Jenkins service jobs so each ECR repository receives a fresh `latest` image, then trigger **Deploy Dev to EKS** from GitHub Actions. MySQL data is stored on an encrypted 5 GiB `gp3` EBS volume. The StorageClass uses `Delete` reclaim policy, so deleting the MySQL PVC deletes its EBS volume.
+Run the relevant Jenkins service job. Its manifest push triggers **Deploy Dev to EKS** automatically; the workflow can also be run manually. MySQL data is stored on an encrypted 5 GiB `gp3` EBS volume. The StorageClass uses `Delete` reclaim policy, so deleting the MySQL PVC deletes its EBS volume.
 
 After the AWS Load Balancer Controller is installed, the deployment workflow applies the Ingress. Get the public URL with `kubectl get ingress -n ivolve`.
 
@@ -42,3 +42,16 @@ kubectl get ingressclass
 ```
 
 The public ALB is created when the GitHub Actions deployment workflow applies `kubernetes/overlays/dev`. It is an AWS billable resource. Confirm the Ingress address with `kubectl get ingress -n ivolve` and test its HTTP URL in a browser.
+
+## Verify the deployed application
+
+With kubectl pointed at `ivolve-x-dev`, run:
+
+```powershell
+kubectl get nodes
+kubectl get pods -n ivolve
+kubectl get pvc -n ivolve
+kubectl get ingress -n ivolve
+```
+
+Expected result: worker nodes are `Ready`; auth-service, roadmap-service, frontend, and MySQL are Running/ready; the MySQL PVC is `Bound`; and the frontend Ingress has an ALB `ADDRESS`. The user confirmed these checks passed after applying the ACLs.

@@ -12,3 +12,11 @@ The project uses Maven. Docker Compose first runs Maven in the `roadmap-builder`
 - `Dockerfile.local` — Compose runtime image for the locally built JAR.
 
 The API does not use MySQL; the database is used by the Auth service.
+
+The roadmap API is internal to the Compose/Kubernetes network. From the repository root with the Compose stack running, request it from the frontend container:
+
+```powershell
+docker compose --env-file docker/.env -f docker/compose.yaml exec frontend node -e "fetch('http://roadmap-service:8080/api/roadmap').then(r => r.text()).then(console.log).catch(err => { console.error(err); process.exit(1) })"
+```
+
+Expected result: JSON describing the roadmap topics. The browser-level check is to sign in and confirm the roadmap page displays its cards. See the root [`app/README.md`](../README.md) for the application request flow.
