@@ -238,6 +238,4 @@ The architecture image is source-controlled, and the stage-by-stage explainer vi
 - Following Network ACL application, the user verified both EKS worker nodes `Ready`, the four application/database pods `Running`, and the ALB Ingress address present.
 - The application was opened through the ALB and the user confirmed it worked.
 
-## License and attribution
 
-This is an NTI training project. Application logos and course assets belong to their respective owners. Add a license only if the project owner has selected one.
