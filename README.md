@@ -33,7 +33,6 @@ The project demonstrates these outcomes:
 
 ![Full IVOLVE DevOps project architecture](docs/images/ivolve-platform-architecture.png)
 
-The architecture diagram is also available as an editable vector at [`docs/images/ivolve-platform-architecture.svg`](docs/images/ivolve-platform-architecture.svg). The PNG is ready for presentation slides and LinkedIn posts.
 
 ### Delivery flow
 
