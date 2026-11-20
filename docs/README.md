@@ -25,6 +25,52 @@ The first two videos include English explanation panels and matching `.srt` file
 
 ![GitHub explainer cover](demo/ivolve-devops-explainer-cover.png)
 
+## Deployment evidence
+
+These user-provided captures show the local stack, the application through its AWS ALB, all three green Jenkins pipeline Stage Views, and a successful GitHub Actions deployment. Select a row to expand its screenshot.
+
+<details>
+<summary>Docker Compose started the local services</summary>
+
+![Docker Compose build and service startup](images/evidence/docker-compose-started.png)
+
+</details>
+
+<details>
+<summary>Application served through the AWS ALB</summary>
+
+![IVOLVE roadmap application served through the ALB](images/evidence/application-live-on-alb.png)
+
+</details>
+
+<details>
+<summary>Jenkins pipeline: Auth service</summary>
+
+![Successful Jenkins Auth service pipeline](images/evidence/jenkins-auth-service-pipeline.png)
+
+</details>
+
+<details>
+<summary>Jenkins pipeline: Roadmap service</summary>
+
+![Successful Jenkins Roadmap service pipeline](images/evidence/jenkins-roadmap-service-pipeline.png)
+
+</details>
+
+<details>
+<summary>Jenkins pipeline: Frontend</summary>
+
+![Successful Jenkins Frontend pipeline](images/evidence/jenkins-frontend-pipeline.png)
+
+</details>
+
+<details>
+<summary>GitHub Actions deployment to EKS</summary>
+
+![Successful GitHub Actions deployment workflow](images/evidence/github-actions-eks-deployment.png)
+
+</details>
+
 ## Stages in the videos
 
 1. Project overview and delivery path.

@@ -217,6 +217,7 @@ The architecture image is source-controlled, and the stage-by-stage explainer vi
 - [Watch or download the LinkedIn explainer](docs/demo/ivolve-devops-linkedin.mp4) (9:16, 55 seconds).
 - [Watch or download the clean GitHub/portfolio version without explanation panels](docs/demo/ivolve-devops-explainer-no-captions.mp4).
 - [Watch or download the clean LinkedIn version without explanation panels](docs/demo/ivolve-devops-linkedin-no-captions.mp4).
+- [View deployment screenshots](docs/README.md#deployment-evidence), including Docker Compose, the live ALB app, the three Jenkins pipelines, and GitHub Actions.
 - Video covers, captioned and clean versions, and regeneration instructions are in [`docs/README.md`](docs/README.md).
 
 [![GitHub video cover](docs/demo/ivolve-devops-explainer-cover.png)](docs/demo/ivolve-devops-explainer.mp4)
