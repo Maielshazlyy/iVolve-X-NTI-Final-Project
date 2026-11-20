@@ -1,12 +1,14 @@
 
 
-https://github.com/user-attachments/assets/84de8a24-56cb-4e20-b30a-3182ec1fa3d9
 
 # IVOLVE × NTI Cloud DevOps Platform
 
 An end-to-end DevOps project that takes the IVOLVE training-roadmap application from local development to AWS. The repository contains the application, Docker Compose environment, Terraform infrastructure, Ansible host configuration, Jenkins CI pipelines, Kubernetes manifests, and GitHub Actions deployment workflow.
 
 > **Start here:** this file explains the project, its architecture, and the end-to-end run order. Each major component has one README at its top level (`app/README.md`, `ansible/README.md`, `jenkins/README.md`, and so on); each one covers the files and commands for its component. Subfolders do not have separate README files.
+>
+> https://github.com/user-attachments/assets/84de8a24-56cb-4e20-b30a-3182ec1fa3d9
+
 
 ## Project at a glance
 
