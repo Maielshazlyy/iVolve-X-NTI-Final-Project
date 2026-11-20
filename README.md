@@ -46,9 +46,13 @@ Developer change
 
 Terraform provisions AWS resources. Ansible configures the Jenkins EC2 host. These are setup/configuration stages; they are not run for every application image deployment.
 
-### Important deployment requirement note
+### Project walkthrough video — no captions
 
-The assignment brief itself is not stored in this repository, so the checklist below reflects the project requirements recorded here. The current deployment workflow is GitHub Actions. The earlier project notes say Argo CD was named in the brief, but the deployed implementation uses event-driven GitHub Actions instead. GitHub Actions is **not** Argo CD and does not continuously reconcile cluster drift. If the grading rubric requires Argo CD specifically, treat that as an open requirement and confirm the accepted alternative with the instructor; do not describe the two tools as equivalent.
+The landscape walkthrough below has no captions or transcript. Select its cover to open the MP4.
+
+[![Play the iVolve DevOps project walkthrough without captions](docs/demo/ivolve-devops-explainer-no-captions-cover.png)](docs/demo/ivolve-devops-explainer-no-captions.mp4)
+
+[Open or download the no-captions video](docs/demo/ivolve-devops-explainer-no-captions.mp4) · [Video details and other formats](docs/README.md#demo-videos)
 
 ## Requirement and delivery status
 
@@ -109,6 +113,13 @@ docker compose --env-file docker/.env -f docker/compose.yaml down
 ```
 
 For logs, health checks, and troubleshooting see [`docker/README.md`](docker/README.md). The first Maven build can take several minutes. Do not use `down --volumes` unless you intentionally want to delete local database data.
+
+<details>
+<summary>Docker Compose evidence</summary>
+
+![Docker Compose building images and starting the local application services](docs/images/evidence/docker-compose-started.png)
+
+</details>
 
 ## AWS infrastructure and Terraform
 
@@ -179,11 +190,39 @@ docker logs --tail 30 ivolve-build-agent
 
 Expected agent log includes `WebSocket connection open` and `Connected`. Exact Jenkins job setup, credentials, and verification are in [`jenkins/README.md`](jenkins/README.md).
 
+<details>
+<summary>Jenkins evidence: Frontend pipeline</summary>
+
+![Successful Jenkins Frontend pipeline stages](docs/images/evidence/jenkins-frontend-pipeline.png)
+
+</details>
+
+<details>
+<summary>Jenkins evidence: Auth service pipeline</summary>
+
+![Successful Jenkins Auth service pipeline stages](docs/images/evidence/jenkins-auth-service-pipeline.png)
+
+</details>
+
+<details>
+<summary>Jenkins evidence: Roadmap service pipeline</summary>
+
+![Successful Jenkins Roadmap service pipeline stages](docs/images/evidence/jenkins-roadmap-service-pipeline.png)
+
+</details>
+
 ## GitHub Actions deployment
 
 The deploy workflow is `.github/workflows/deploy-dev.yml`. It runs on `workflow_dispatch` or when one of the service manifests changes on `main`. The runner labels are `self-hosted`, `linux`, and `x64`. Configure repository Actions secrets for AWS deployment and app/database configuration; exact secret names and workflow behavior are in [`.github/README.md`](.github/README.md).
 
 The AWS Organization Service Control Policy blocks creation of the GitHub OIDC provider in this account. The current implementation therefore uses a dedicated IAM deploy user's access keys in repository secrets. Treat these as credentials, rotate/revoke them when appropriate, and never include their values in public evidence.
+
+<details>
+<summary>GitHub Actions deployment evidence</summary>
+
+![Successful GitHub Actions deployment workflow to EKS](docs/images/evidence/github-actions-eks-deployment.png)
+
+</details>
 
 ## Kubernetes and application verification
 
@@ -208,6 +247,13 @@ kubectl rollout status deployment/auth-service -n ivolve --timeout=300s
 kubectl rollout status deployment/roadmap-service -n ivolve --timeout=300s
 kubectl rollout status deployment/frontend -n ivolve --timeout=300s
 ```
+
+<details>
+<summary>Application evidence: live through the AWS ALB</summary>
+
+![iVolve training roadmap application served through the AWS ALB](docs/images/evidence/application-live-on-alb.png)
+
+</details>
 
 ## Evidence and demo
 

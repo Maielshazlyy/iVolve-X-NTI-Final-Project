@@ -9,6 +9,7 @@ This is the single README for everything under `docs/`: the full system architec
 - Editable vector: [`images/ivolve-platform-architecture.svg`](images/ivolve-platform-architecture.svg).
 - Raster image for slides and social media: [`images/ivolve-platform-architecture.png`](images/ivolve-platform-architecture.png).
 - Diagram source and rendering script: [`images/render_architecture.py`](images/render_architecture.py). Run `python docs/images/render_architecture.py` from the repository root to regenerate the PNG (requires Pillow).
+- The diagram uses the project and service marks plus AWS and technology logos; the source assets are kept in [`demo/assets/logos/`](demo/assets/logos/) and the frontend brand marks in `app/frontend/public/images/`.
 
 ## Demo videos
 

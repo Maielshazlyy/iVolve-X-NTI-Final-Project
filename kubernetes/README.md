@@ -6,12 +6,24 @@ Jenkins builds and scans each service image, publishes it to ECR, updates that s
 
 - `base/` contains the MySQL StatefulSet and persistent EBS claim, app ConfigMap, service Deployments, and internal Services.
 - `overlays/dev/` scopes namespaced resources to the existing `ivolve` namespace.
-- The workflow creates or updates the Kubernetes Secret from GitHub repository secrets. Credentials are not stored in manifests.
+- `base/namespace.yaml` declares the required `ivolve` namespace. Create it once with a cluster-admin identity; the GitHub deploy identity cannot create cluster-scoped resources.
+- `base/app-secrets.example.yaml` documents the required Secret name and keys with safe placeholders. Do not apply this template or commit real credentials. The workflow creates or updates the live Secret from GitHub repository secrets.
 - `base/storageclass.yaml` is cluster-scoped and must be installed once by a cluster administrator; the GitHub deploy identity is limited to the `ivolve` namespace.
 - `base/frontend-ingress.yaml` defines an internet-facing AWS Application Load Balancer Ingress routing HTTP traffic to the frontend ClusterIP Service.
 - The Ingress requires the AWS Load Balancer Controller, its EKS Pod Identity role/association, and tagged public subnets. The cluster administrator installs the controller; the GitHub deploy identity applies the namespaced Ingress.
 
 These subfolders are covered by this README: `base/` holds the MySQL StatefulSet/headless Service, ConfigMap, app Deployments/Services, ingress, and the separate cluster-scoped `storageclass.yaml`; `overlays/dev/` selects the ECR images and the already-existing `ivolve` namespace for the deployed development stack. Jenkins updates service image tags in `base/`; GitHub Actions applies `overlays/dev/`.
+
+## One-time namespace setup
+
+Create the namespace before the first automated deployment, using a kubeconfig with cluster-admin access. The deploy identity used by GitHub Actions is intentionally not allowed to create namespaces:
+
+```powershell
+kubectl apply -f kubernetes/base/namespace.yaml
+kubectl get namespace ivolve
+```
+
+The application Secret values belong in GitHub repository secrets (`MYSQL_ROOT_PASSWORD`, `DB_USER`, `DB_PASSWORD`, and `SESSION_SECRET`). The workflow materializes them as `app-secrets` at deployment time. `base/app-secrets.example.yaml` is a documentation template only and must not be applied.
 
 ## Development deployment
 
