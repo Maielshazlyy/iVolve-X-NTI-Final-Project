@@ -1,14 +1,8 @@
-
-
-
 # IVOLVE × NTI Cloud DevOps Platform
 
 An end-to-end DevOps project that takes the IVOLVE training-roadmap application from local development to AWS. The repository contains the application, Docker Compose environment, Terraform infrastructure, Ansible host configuration, Jenkins CI pipelines, Kubernetes manifests, and GitHub Actions deployment workflow.
 
 > **Start here:** this file explains the project, its architecture, and the end-to-end run order. Each major component has one README at its top level (`app/README.md`, `ansible/README.md`, `jenkins/README.md`, and so on); each one covers the files and commands for its component. Subfolders do not have separate README files.
->
-> https://github.com/user-attachments/assets/84de8a24-56cb-4e20-b30a-3182ec1fa3d9
-
 
 ## Project at a glance
 
@@ -33,6 +27,7 @@ The project demonstrates these outcomes:
 
 ![Full IVOLVE DevOps project architecture](docs/images/ivolve-platform-architecture.png)
 
+The architecture diagram is also available as an editable vector at [`docs/images/ivolve-platform-architecture.svg`](docs/images/ivolve-platform-architecture.svg). The PNG is ready for presentation slides and LinkedIn posts.
 
 ### Delivery flow
 
@@ -51,13 +46,11 @@ Developer change
 
 Terraform provisions AWS resources. Ansible configures the Jenkins EC2 host. These are setup/configuration stages; they are not run for every application image deployment.
 
-### Project walkthrough video 
+## Project Demo
 
-The landscape walkthrough below has no captions or transcript. Select its cover to open the MP4.
+Watch the project walkthrough:
 
-[![Play the iVolve DevOps project walkthrough without captions](docs/demo/ivolve-devops-explainer-no-captions-cover.png)](docs/demo/ivolve-devops-explainer-no-captions.mp4)
-
-[Open or download the no-captions video](docs/demo/ivolve-devops-explainer-no-captions.mp4) · [Video details and other formats](docs/README.md#demo-videos)
+![](https://github.com/user-attachments/assets/84de8a24-56cb-4e20-b30a-3182ec1fa3d9)
 
 ## Requirement and delivery status
 
@@ -119,12 +112,7 @@ docker compose --env-file docker/.env -f docker/compose.yaml down
 
 For logs, health checks, and troubleshooting see [`docker/README.md`](docker/README.md). The first Maven build can take several minutes. Do not use `down --volumes` unless you intentionally want to delete local database data.
 
-<details>
-<summary>Docker Compose evidence</summary>
-
 ![Docker Compose building images and starting the local application services](docs/images/evidence/docker-compose-started.png)
-
-</details>
 
 ## AWS infrastructure and Terraform
 
@@ -195,26 +183,11 @@ docker logs --tail 30 ivolve-build-agent
 
 Expected agent log includes `WebSocket connection open` and `Connected`. Exact Jenkins job setup, credentials, and verification are in [`jenkins/README.md`](jenkins/README.md).
 
-<details>
-<summary>Jenkins evidence: Frontend pipeline</summary>
-
 ![Successful Jenkins Frontend pipeline stages](docs/images/evidence/jenkins-frontend-pipeline.png)
-
-</details>
-
-<details>
-<summary>Jenkins evidence: Auth service pipeline</summary>
 
 ![Successful Jenkins Auth service pipeline stages](docs/images/evidence/jenkins-auth-service-pipeline.png)
 
-</details>
-
-<details>
-<summary>Jenkins evidence: Roadmap service pipeline</summary>
-
 ![Successful Jenkins Roadmap service pipeline stages](docs/images/evidence/jenkins-roadmap-service-pipeline.png)
-
-</details>
 
 ## GitHub Actions deployment
 
@@ -222,12 +195,7 @@ The deploy workflow is `.github/workflows/deploy-dev.yml`. It runs on `workflow_
 
 The AWS Organization Service Control Policy blocks creation of the GitHub OIDC provider in this account. The current implementation therefore uses a dedicated IAM deploy user's access keys in repository secrets. Treat these as credentials, rotate/revoke them when appropriate, and never include their values in public evidence.
 
-<details>
-<summary>GitHub Actions deployment evidence</summary>
-
 ![Successful GitHub Actions deployment workflow to EKS](docs/images/evidence/github-actions-eks-deployment.png)
-
-</details>
 
 ## Kubernetes and application verification
 
@@ -253,27 +221,11 @@ kubectl rollout status deployment/roadmap-service -n ivolve --timeout=300s
 kubectl rollout status deployment/frontend -n ivolve --timeout=300s
 ```
 
-<details>
-<summary>Application evidence: live through the AWS ALB</summary>
-
 ![iVolve training roadmap application served through the AWS ALB](docs/images/evidence/application-live-on-alb.png)
 
-</details>
+## More demo formats
 
-## Evidence and demo
-
-The architecture image is source-controlled, and the stage-by-stage explainer videos are ready:
-
-- [Watch or download the GitHub/portfolio explainer](docs/demo/ivolve-devops-explainer.mp4) (16:9, 67 seconds).
-- [Watch or download the LinkedIn explainer](docs/demo/ivolve-devops-linkedin.mp4) (9:16, 55 seconds).
-- [Watch or download the clean GitHub/portfolio version without explanation panels](docs/demo/ivolve-devops-explainer-no-captions.mp4).
-- [Watch or download the clean LinkedIn version without explanation panels](docs/demo/ivolve-devops-linkedin-no-captions.mp4).
-- [View deployment screenshots](docs/README.md#deployment-evidence), including Docker Compose, the live ALB app, the three Jenkins pipelines, and GitHub Actions.
-- Video covers, captioned and clean versions, and regeneration instructions are in [`docs/README.md`](docs/README.md).
-
-[![GitHub video cover](docs/demo/ivolve-devops-explainer-cover.png)](docs/demo/ivolve-devops-explainer.mp4)
-
-[![LinkedIn video cover](docs/demo/ivolve-devops-linkedin-cover.png)](docs/demo/ivolve-devops-linkedin.mp4)
+The [docs guide](docs/README.md#demo-videos) contains the landscape and vertical video versions and the deployment screenshots.
 
 ## Security and cost notes
 
