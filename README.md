@@ -1,4 +1,4 @@
-# IVOLVE × NTI Cloud DevOps Platform
+# IVOLVE × NTI Cloud DevOps Accelerator
 
 An end-to-end DevOps project that takes the IVOLVE training-roadmap application from local development to AWS. The repository contains the application, Docker Compose environment, Terraform infrastructure, Ansible host configuration, Jenkins CI pipelines, Kubernetes manifests, and GitHub Actions deployment workflow.
 
