@@ -6,6 +6,27 @@ An end-to-end DevOps project that takes the IVOLVE training-roadmap application 
 
 ## Project at a glance
 
+### Project idea
+
+The project turns a training-roadmap website into a cloud-hosted application and uses it to demonstrate a practical DevOps delivery path. A learner can sign up, sign in, and view the DevOps topics on the roadmap. Behind that interface, separate services handle the website, authentication, and roadmap data, while MySQL stores user accounts.
+
+The engineering goal is to make the application repeatable to run, build, deploy, and update. Docker Compose provides a local environment; Terraform provisions AWS; Ansible configures Jenkins; Jenkins builds and scans service images; and Kubernetes runs the application on EKS. GitHub Actions applies the Kubernetes manifests after they change.
+
+### Assignment requirements and implementation
+
+| Assignment area | What the requirement asks for | What this project implements |
+|---|---|---|
+| Repository and application | Store the application in GitHub and provide a README | This repository contains the application source, infrastructure, automation, manifests, and documentation. The repository is currently named `iVolve-X-NTI-Final-Project`. |
+| Docker | Build and run the application with its database using Compose | `docker/compose.yaml` starts the frontend, Auth API, Roadmap API, and MySQL locally. The Compose guide explains setup, commands, and expected health. |
+| Terraform and AWS | Provision networking, Jenkins EC2, EKS worker nodes, ECR, and remote state | Reusable modules provision the VPC, public/private subnets, gateways, routes, ACLs, Jenkins host, EKS, ECR, and an S3 state backend. |
+| Ansible | Configure Jenkins with roles and dynamic inventory | Ansible discovers the Jenkins EC2 host from AWS and configures Java, Jenkins, Docker, Trivy, and supporting packages through roles. |
+| Kubernetes | Run the services and database with persistent storage and frontend ingress | Manifests define the `ivolve` namespace, service Deployments and Services, MySQL StatefulSet and headless Service, ConfigMap/Secret inputs, GP3 storage, and ALB Ingress. |
+| CI | Build, scan, and publish each service image with Jenkins and a Shared Library | Three Jenkins pipelines handle the frontend, Auth service, and Roadmap service. They build images, scan with Trivy, push to ECR, then update and push the service manifest. |
+| CD | Sync application changes into the cluster | GitHub Actions deploys the changed manifests to EKS and checks rollouts. This is the instructor-approved alternative to the ArgoCD task; this repository does not install ArgoCD. |
+| Documentation | Explain setup and architecture | The root README gives the project overview. Each major component has its own README with its files, commands, verification, and troubleshooting. |
+
+The assignment asks for a repository named `CloudDevOpsProject`; the existing repository name differs, as shown above. The deployment and component implementation are described in the linked guides below.
+
 The application has three services and a database:
 
 | Component | Technology | Responsibility |
@@ -50,7 +71,7 @@ Terraform provisions AWS resources. Ansible configures the Jenkins EC2 host. The
 
 Watch the project walkthrough:
 
-![](https://github.com/user-attachments/assets/84de8a24-56cb-4e20-b30a-3182ec1fa3d9)
+https://github.com/user-attachments/assets/84de8a24-56cb-4e20-b30a-3182ec1fa3d9
 
 ## Requirement and delivery status
 
@@ -66,18 +87,18 @@ Watch the project walkthrough:
 
 ## Repository and README guide
 
-There is one detailed README for each major component folder. Each guide brings together the relevant subfolder structure, setup steps, commands, and expected output.
+The root guide introduces the idea, assignment scope, architecture, delivery flow, and verified results. There is also one detailed README for each major component folder. Those guides explain that section's implementation, files, setup steps, commands, and expected output; use them when you need the operational details.
 
-| Folder | What it contains | Folder guide |
+| Folder | What we did in this part | Detailed guide |
 |---|---|---|
-| `app/` | Frontend, Auth API, Roadmap API | [`app/README.md`](app/README.md) |
-| `docker/` | Local Compose stack, env template, service health checks | [`docker/README.md`](docker/README.md) |
-| `terraform/` | AWS infrastructure and Terraform state management | [`terraform/README.md`](terraform/README.md) |
-| `ansible/` | Dynamic AWS inventory and Jenkins configuration | [`ansible/README.md`](ansible/README.md) |
-| `jenkins/` | Controller/agent setup, pipeline definitions, shared library | [`jenkins/README.md`](jenkins/README.md) |
-| `kubernetes/` | Shared manifests, dev overlay, storage, and Ingress | [`kubernetes/README.md`](kubernetes/README.md) |
-| `.github/` | GitHub repository automation | [`.github/README.md`](.github/README.md) |
-| `docs/` | Architecture diagram, demo videos, covers, and generation assets | [`docs/README.md`](docs/README.md) |
+| `app/` | Holds the frontend and the Auth and Roadmap APIs that make up the training application. | [`app/README.md`](app/README.md) |
+| `docker/` | Defines the local Compose network, service configuration, health checks, and MySQL persistence. | [`docker/README.md`](docker/README.md) |
+| `terraform/` | Creates AWS networking, Jenkins EC2, EKS, ECR, IAM access, and remote Terraform state. | [`terraform/README.md`](terraform/README.md) |
+| `ansible/` | Uses AWS dynamic inventory and Ansible roles to install and configure Jenkins host tools. | [`ansible/README.md`](ansible/README.md) |
+| `jenkins/` | Defines the Jenkins controller/agent setup, three service pipelines, and reusable Shared Library. | [`jenkins/README.md`](jenkins/README.md) |
+| `kubernetes/` | Defines application workloads, MySQL persistence, configuration, storage, and frontend Ingress. | [`kubernetes/README.md`](kubernetes/README.md) |
+| `.github/` | Defines the GitHub Actions deployment and access-verification workflows. | [`.github/README.md`](.github/README.md) |
+| `docs/` | Stores the architecture diagram, demo videos, visual assets, and deployment evidence. | [`docs/README.md`](docs/README.md) |
 
 ## Quick start: local application
 
