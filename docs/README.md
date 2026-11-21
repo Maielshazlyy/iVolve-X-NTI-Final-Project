@@ -28,7 +28,14 @@ The first two videos include English explanation panels and matching `.srt` file
 
 ## Deployment evidence
 
-These user-provided captures show the local stack, the application through its AWS ALB, all three green Jenkins pipeline Stage Views, and a successful GitHub Actions deployment. Select a row to expand its screenshot.
+These user-provided captures show the local stack, EKS workload health, the application through its AWS ALB, all three green Jenkins pipeline Stage Views, and a successful GitHub Actions deployment. Select a row to expand its screenshot.
+
+<details>
+<summary>EKS nodes, workloads, persistent storage, and Ingress are healthy</summary>
+
+![EKS verification showing healthy nodes, application pods, services, MySQL persistent storage, and the frontend ALB Ingress](images/evidence/eks-workloads-healthy.png)
+
+</details>
 
 <details>
 <summary>Docker Compose started the local services</summary>

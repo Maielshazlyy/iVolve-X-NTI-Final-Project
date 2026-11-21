@@ -242,6 +242,10 @@ kubectl rollout status deployment/roadmap-service -n ivolve --timeout=300s
 kubectl rollout status deployment/frontend -n ivolve --timeout=300s
 ```
 
+The captured cluster check below shows both EKS worker nodes `Ready`, all three service Deployments available, the MySQL StatefulSet running, all four pods ready, and the 5 GiB MySQL claim bound to the `gp3` StorageClass. The frontend Ingress also has an AWS ALB address.
+
+![EKS verification showing healthy nodes, application pods, services, MySQL persistent storage, and the frontend ALB Ingress](docs/images/evidence/eks-workloads-healthy.png)
+
 ![iVolve training roadmap application served through the AWS ALB](docs/images/evidence/application-live-on-alb.png)
 
 ## More demo formats
