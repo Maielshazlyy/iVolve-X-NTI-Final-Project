@@ -43,7 +43,7 @@ jobs:
           docker build -t roadmap-service:${GITHUB_SHA} app/roadmap-service
 
       - name: Scan built images with Trivy
-        uses: aquasecurity/trivy-action@0.36.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: frontend:${{ github.sha }}
           format: table
@@ -53,7 +53,7 @@ jobs:
           severity: CRITICAL,HIGH
 
       - name: Scan auth-service image with Trivy
-        uses: aquasecurity/trivy-action@0.36.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: auth-service:${{ github.sha }}
           format: table
@@ -63,7 +63,7 @@ jobs:
           severity: CRITICAL,HIGH
 
       - name: Scan roadmap-service image with Trivy
-        uses: aquasecurity/trivy-action@0.36.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: roadmap-service:${{ github.sha }}
           format: table
