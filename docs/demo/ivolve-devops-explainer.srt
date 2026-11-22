@@ -12,32 +12,28 @@ Docker Compose starts the frontend, APIs, and MySQL together with configured net
 
 4
 00:00:18,150 --> 00:00:24,200
-Terraform provisions a VPC across two Availability Zones, public and private subnets, EKS, ECR, Jenkins EC2, and encrypted S3 state.
+Terraform provisions a VPC across two Availability Zones, public and private subnets, EKS, ECR, and encrypted S3 state.
 
 5
 00:00:24,200 --> 00:00:30,250
-Ansible discovers the Jenkins EC2 host and installs Java, Docker, Trivy, and Jenkins configuration through reusable roles.
+GitHub Actions builds each service image on hosted runners and scans the images with Trivy before publishing.
 
 6
 00:00:30,250 --> 00:00:36,300
-Each Jenkins pipeline checks out the code, builds its service image on a Docker build agent, and runs a Trivy vulnerability scan.
+Passing images are pushed to private ECR repositories with immutable commit tags. GitHub Actions updates the matching Kubernetes manifest in Git.
 
 7
 00:00:36,300 --> 00:00:42,350
-Passing images are pushed to private ECR repositories. Jenkins updates the matching Kubernetes manifest with the new image tag and commits it.
+Argo CD watches the dev overlay in Git and continuously reconciles its Kubernetes resources into Amazon EKS.
 
 8
 00:00:42,350 --> 00:00:48,400
-The deployment workflow configures AWS and kubectl, applies the development overlay, waits for MySQL and application rollouts, and reports the deployed resources.
+The EKS cluster runs the frontend, Auth API, Roadmap API, and MySQL StatefulSet. The EBS CSI driver provisions the gp3 database volume.
 
 9
 00:00:48,400 --> 00:00:54,450
-The EKS cluster runs the frontend, Auth API, Roadmap API, and MySQL StatefulSet. The EBS CSI driver provisions the gp3 database volume.
-
-10
-00:00:54,450 --> 00:01:00,500
 The AWS Load Balancer Controller creates an Application Load Balancer. It routes browser traffic to the frontend, which calls the APIs inside the cluster.
 
-11
-00:01:00,500 --> 00:01:07,000
-Together, Terraform, Ansible, Jenkins, Trivy, ECR, Kubernetes, and GitHub Actions create a repeatable path from a code change to the live training roadmap.
+10
+00:00:54,450 --> 00:01:00,950
+Terraform provisions AWS, GitHub Actions builds and scans images, and Argo CD syncs Git manifests into Kubernetes.

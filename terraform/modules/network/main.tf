@@ -17,7 +17,6 @@ locals {
     ManagedBy   = "Terraform"
   }
 
-  trusted_admin_cidrs = sort(tolist(var.trusted_admin_cidrs))
 }
 
 resource "aws_vpc" "this" {
@@ -156,30 +155,6 @@ resource "aws_network_acl" "public" {
     to_port    = 80
   }
 
-  dynamic "ingress" {
-    for_each = local.trusted_admin_cidrs
-    content {
-      rule_no    = 120 + (ingress.key * 2)
-      protocol   = "tcp"
-      action     = "allow"
-      cidr_block = ingress.value
-      from_port  = 22
-      to_port    = 22
-    }
-  }
-
-  dynamic "ingress" {
-    for_each = local.trusted_admin_cidrs
-    content {
-      rule_no    = 121 + (ingress.key * 2)
-      protocol   = "tcp"
-      action     = "allow"
-      cidr_block = ingress.value
-      from_port  = 8080
-      to_port    = 8080
-    }
-  }
-
   ingress {
     rule_no    = 160
     protocol   = "tcp"
@@ -241,6 +216,15 @@ resource "aws_network_acl" "private" {
     cidr_block = var.vpc_cidr
     from_port  = 0
     to_port    = 0
+  }
+
+  ingress {
+    rule_no    = 110
+    protocol   = "tcp"
+    action     = "allow"
+    cidr_block = "0.0.0.0/0"
+    from_port  = 1024
+    to_port    = 65535
   }
 
   egress {

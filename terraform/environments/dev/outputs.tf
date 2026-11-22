@@ -46,22 +46,7 @@ output "ecr_repository_urls" {
   value       = module.ecr.repository_urls
 }
 
-output "jenkins_instance_id" {
-  description = "EC2 instance ID of the Jenkins controller host."
-  value       = module.jenkins.instance_id
-}
-
-output "jenkins_public_ip" {
-  description = "Public address for Jenkins UI and SSH from approved CIDRs."
-  value       = module.jenkins.public_ip
-}
-
-output "jenkins_public_dns" {
-  description = "Public DNS name of the Jenkins host."
-  value       = module.jenkins.public_dns
-}
-
-output "github_actions_deploy_user_arn" {
-  description = "IAM user ARN used by GitHub Actions for EKS deployments."
-  value       = module.github_actions.user_arn
+output "github_actions_ci_user_arn" {
+  description = "IAM user ARN used by GitHub Actions to publish container images to ECR."
+  value       = module.github_actions.ci_user_arn
 }

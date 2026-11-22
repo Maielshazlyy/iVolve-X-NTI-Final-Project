@@ -38,8 +38,3 @@ variable "single_nat_gateway" {
   type        = bool
   default     = true
 }
-
-variable "trusted_admin_cidrs" {
-  description = "Trusted IPv4 CIDRs allowed to reach Jenkins SSH and web ports through the public subnet ACL."
-  type        = set(string)
-}

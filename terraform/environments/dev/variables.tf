@@ -85,35 +85,8 @@ variable "node_max_size" {
   default     = 2
 }
 
-variable "jenkins_key_name" {
-  description = "Existing EC2 key pair name in eu-north-1 for Jenkins host access."
-  type        = string
-}
-
-variable "jenkins_admin_cidrs" {
-  description = "Trusted IPv4 CIDRs allowed to SSH to the Jenkins host and access its web UI. Include your current public IP and, if needed, the Ansible control host's egress IP."
-  type        = set(string)
-
-  validation {
-    condition     = length(var.jenkins_admin_cidrs) > 0 && alltrue([for cidr in var.jenkins_admin_cidrs : can(cidrhost(cidr, 0))])
-    error_message = "Provide at least one valid trusted IPv4 CIDR, such as your current public IP with /32."
-  }
-}
-
-variable "jenkins_instance_type" {
-  description = "EC2 size for the Jenkins controller host."
-  type        = string
-  default     = "t3.small"
-}
-
-variable "github_deploy_user_name" {
-  description = "Existing IAM user whose access keys GitHub Actions will use for deployment."
+variable "github_ci_user_name" {
+  description = "Existing IAM user whose access keys GitHub Actions will use to publish images to ECR."
   type        = string
   default     = "ivolve-x-dev-github-deployer"
-}
-
-variable "kubernetes_namespace" {
-  description = "Namespace where GitHub Actions may manage application resources."
-  type        = string
-  default     = "ivolve"
 }

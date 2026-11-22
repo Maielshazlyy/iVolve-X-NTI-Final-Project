@@ -8,22 +8,12 @@ variable "environment" {
   type        = string
 }
 
-variable "cluster_name" {
-  description = "EKS cluster that GitHub Actions will deploy to."
+variable "ci_user_name" {
+  description = "Existing IAM user whose access keys GitHub Actions uses to publish images."
   type        = string
 }
 
-variable "cluster_arn" {
-  description = "EKS cluster ARN for least-privilege DescribeCluster access."
-  type        = string
-}
-
-variable "deploy_user_name" {
-  description = "Name of the existing IAM user used by GitHub Actions."
-  type        = string
-}
-
-variable "namespace" {
-  description = "Kubernetes namespace that the deployment role can manage."
-  type        = string
+variable "ecr_repository_arns" {
+  description = "ECR repository ARNs where the GitHub Actions CI workflow may publish images."
+  type        = list(string)
 }

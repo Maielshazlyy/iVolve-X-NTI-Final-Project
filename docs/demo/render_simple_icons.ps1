@@ -10,11 +10,9 @@ $outputDirectory = Join-Path $iconDirectory 'rasterized'
 New-Item -ItemType Directory -Path $outputDirectory -Force | Out-Null
 
 $brandColors = @{
-  ansible    = '#F4F4F4'
   docker     = '#2496ED'
   flask      = '#F4F4F4'
   github     = '#F4F4F4'
-  jenkins    = '#D24939'
   kubernetes = '#326CE5'
   mysql      = '#4479A1'
   nodedotjs  = '#5FA04E'

@@ -1,143 +1,29 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="1160" viewBox="0 0 1800 1160" role="img" aria-labelledby="title desc">
-  <title id="title">IVOLVE NTI cloud DevOps project architecture</title>
-  <desc id="desc">Terraform and Ansible provision and configure the AWS platform. Jenkins builds and scans service images on a Docker agent, pushes images to ECR, and commits immutable image tags to GitHub. GitHub Actions runs on a self-hosted runner on the Jenkins EC2 host and deploys the Kubernetes overlay to EKS. An internet-facing ALB serves the frontend, which calls the Auth and Roadmap services; Auth persists users to MySQL on EBS.</desc>
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1060" viewBox="0 0 1600 1060" role="img" aria-labelledby="title desc">
+  <title id="title">iVolve and NTI cloud DevOps architecture</title>
+  <desc id="desc">GitHub Actions builds, scans, and pushes immutable service images to ECR, then commits updated image references. Argo CD watches Git and synchronizes Kubernetes resources into Amazon EKS. Terraform provisions AWS. EKS hosts the application and MySQL with EBS storage; an AWS ALB exposes the frontend.</desc>
   <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#081426"/><stop offset="1" stop-color="#111d35"/></linearGradient>
-    <linearGradient id="aws" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#182842"/><stop offset="1" stop-color="#122035"/></linearGradient>
-    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#8db8ff"/></marker>
-    <marker id="arrowGreen" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#71ddb0"/></marker>
-    <style>
-      text{font-family:Inter,Segoe UI,Arial,sans-serif;fill:#eef4ff} .title{font-size:34px;font-weight:700}.subtitle{font-size:16px;fill:#a9bbd5}
-      .section{font-size:16px;font-weight:700;letter-spacing:1px;fill:#91baff}.card{fill:#16243a;stroke:#385271;stroke-width:1.5}.card2{fill:#1a2d47;stroke:#5075a5;stroke-width:1.5}
-      .head{font-size:20px;font-weight:700}.body{font-size:15px;fill:#c5d2e4}.small{font-size:13px;fill:#9fb4ce}.tag{font-size:12px;font-weight:700;fill:#071426}
-      .flow{fill:none;stroke:#8db8ff;stroke-width:3;marker-end:url(#arrow)}.deploy{fill:none;stroke:#71ddb0;stroke-width:3;marker-end:url(#arrowGreen)}
-      .dash{fill:none;stroke:#5d7798;stroke-width:1.5;stroke-dasharray:8 8}.lane{fill:#0e1a2d;stroke:#2d4564;stroke-width:1.5}
-    </style>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#081120"/><stop offset="1" stop-color="#14243b"/></linearGradient>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto"><path d="M0 0L10 5L0 10z" fill="#75aaff"/></marker>
+    <marker id="green" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto"><path d="M0 0L10 5L0 10z" fill="#5fdaa6"/></marker>
+    <style>text{font-family:Segoe UI,Arial,sans-serif;fill:#eff5ff}.title{font-size:36px;font-weight:700}.sub{font-size:19px;fill:#8fa5c2}.section{font-size:20px;font-weight:700;fill:#75aaff;letter-spacing:1px}.head{font-size:21px;font-weight:700}.body{font-size:18px;fill:#bfcfe4}.small{font-size:15px;fill:#8fa5c2}.panel{fill:#101d31;stroke:#2c4462;stroke-width:2}.card{fill:#17273f;stroke:#354f6f;stroke-width:2}.card2{fill:#1b304c;stroke:#466183;stroke-width:2}.arrow{fill:none;stroke:#75aaff;stroke-width:4;marker-end:url(#arrow)}.deploy{fill:none;stroke:#5fdaa6;stroke-width:4;marker-end:url(#green)}</style>
   </defs>
-  <!-- Logos use repository assets so the SVG stays editable and portable in this checkout. -->
-  <rect width="1800" height="1160" rx="24" fill="url(#bg)"/>
-  <text x="54" y="62" class="title">IVOLVE × NTI | Cloud DevOps delivery architecture</text>
-  <text x="56" y="92" class="subtitle">Local development → Infrastructure as Code → CI → image registry → automated EKS deployment → browser</text>
-
-  <rect x="48" y="122" width="1704" height="300" rx="18" class="lane"/>
-  <text x="74" y="155" class="section">SOURCE CONTROL &amp; CONTINUOUS INTEGRATION</text>
-
-  <rect x="78" y="190" width="260" height="155" rx="14" class="card"/>
-  <rect x="104" y="199" width="30" height="30" rx="7" fill="#142338" stroke="#4b678c"/><image href="../demo/assets/logos/rasterized/github.png" x="108" y="203" width="22" height="22" preserveAspectRatio="xMidYMid meet"/>
-  <text x="144" y="226" class="head">GitHub repository</text>
-  <text x="104" y="256" class="body">Application source</text>
-  <text x="104" y="280" class="body">Kubernetes manifests</text>
-  <text x="104" y="304" class="body">Jenkinsfiles + workflows</text>
-  <rect x="104" y="318" width="106" height="20" rx="10" fill="#79aaff"/><text x="117" y="333" class="tag">main branch</text>
-
-  <rect x="424" y="190" width="300" height="155" rx="14" class="card2"/>
-  <rect x="450" y="199" width="30" height="30" rx="7" fill="#f1f6ff" stroke="#dde8f9"/><image href="../demo/assets/logos/rasterized/jenkins.png" x="454" y="203" width="22" height="22" preserveAspectRatio="xMidYMid meet"/>
-  <text x="490" y="226" class="head">Jenkins controller</text>
-  <text x="450" y="256" class="body">Terraform-managed EC2</text>
-  <text x="450" y="280" class="body">Three service pipelines</text>
-  <text x="450" y="304" class="body">Trusted Groovy Shared Library</text>
-  <text x="450" y="328" class="small">Ansible installs/configures Jenkins</text>
-
-  <rect x="802" y="190" width="300" height="155" rx="14" class="card"/>
-  <rect x="828" y="199" width="30" height="30" rx="7" fill="#f1f6ff" stroke="#dde8f9"/><image href="../demo/assets/logos/rasterized/docker.png" x="832" y="203" width="22" height="22" preserveAspectRatio="xMidYMid meet"/>
-  <text x="868" y="226" class="head">Docker build agent</text>
-  <text x="828" y="256" class="body">Docker Desktop container</text>
-  <text x="828" y="280" class="body">Docker CLI + Trivy + AWS CLI</text>
-  <text x="828" y="304" class="body">Builds and scans each service</text>
-  <text x="828" y="328" class="small">Inbound WebSocket to Jenkins EC2</text>
-
-  <rect x="1180" y="190" width="245" height="155" rx="14" class="card2"/>
-  <rect x="1206" y="199" width="30" height="30" rx="7" fill="#f1f6ff" stroke="#dde8f9"/><image href="../demo/assets/logos/aws/ecr.png" x="1210" y="203" width="22" height="22" preserveAspectRatio="xMidYMid meet"/>
-  <text x="1246" y="226" class="head">Amazon ECR</text>
-  <text x="1206" y="256" class="body">Private service repos</text>
-  <text x="1206" y="280" class="body">frontend · auth · roadmap</text>
-  <text x="1206" y="304" class="body">Scans on image push</text>
-  <text x="1206" y="328" class="small">Build-number image references</text>
-
-  <path d="M338 260 H414" class="flow"/><text x="342" y="246" class="small">SCM checkout</text>
-  <path d="M724 260 H792" class="flow"/><text x="726" y="246" class="small">remote build</text>
-  <path d="M1102 260 H1170" class="flow"/><text x="1106" y="246" class="small">scan + push</text>
-  <path d="M574 345 V385 H208 V354" class="flow"/><text x="298" y="379" class="small">Push updated manifest using Jenkins GitHub credential</text>
-
-  <rect x="48" y="452" width="1704" height="650" rx="18" fill="url(#aws)" stroke="#54739b" stroke-width="2"/>
-  <text x="76" y="489" class="section">AWS CLOUD | eu-north-1</text>
-
-  <rect x="80" y="524" width="280" height="148" rx="14" class="card"/>
-  <rect x="106" y="532" width="30" height="30" rx="7" fill="#f1f6ff" stroke="#dde8f9"/><image href="../demo/assets/logos/rasterized/terraform.png" x="110" y="536" width="22" height="22" preserveAspectRatio="xMidYMid meet"/>
-  <text x="146" y="560" class="head">Terraform + S3 state</text>
-  <text x="106" y="590" class="body">VPC, subnets, NAT, ACLs</text>
-  <text x="106" y="614" class="body">EKS, ECR, Jenkins, IAM</text>
-  <text x="106" y="638" class="small">Encrypted/versioned remote state</text>
-
-  <rect x="80" y="714" width="280" height="142" rx="14" class="card"/>
-  <rect x="106" y="722" width="30" height="30" rx="7" fill="#142338" stroke="#4b678c"/><image href="../demo/assets/logos/rasterized/ansible.png" x="110" y="726" width="22" height="22" preserveAspectRatio="xMidYMid meet"/>
-  <text x="146" y="750" class="head">Ansible control host</text>
-  <text x="106" y="780" class="body">Dynamic EC2 inventory</text>
-  <text x="106" y="804" class="body">Java 21 · Docker · Trivy</text>
-  <text x="106" y="828" class="small">Configures Jenkins EC2 over SSH</text>
-
-  <path d="M360 590 H415 V263 H414" class="dash" marker-end="url(#arrow)"/>
-  <path d="M360 785 H394 V320 H424" class="dash" marker-end="url(#arrow)"/>
-
-  <rect x="424" y="524" width="1275" height="525" rx="20" fill="#0e1b2c" stroke="#6e8caf" stroke-width="2"/>
-  <text x="450" y="558" class="section">VPC 10.40.0.0/16 | public and private subnets across two AZs</text>
-
-  <rect x="450" y="584" width="365" height="178" rx="14" class="card"/>
-  <rect x="476" y="592" width="30" height="30" rx="7" fill="#f1f6ff" stroke="#dde8f9"/><image href="../demo/assets/logos/aws/ec2.png" x="480" y="596" width="22" height="22" preserveAspectRatio="xMidYMid meet"/>
-  <text x="516" y="620" class="head">Jenkins EC2 host</text>
-  <text x="476" y="650" class="body">Jenkins controller :8080</text>
-  <text x="476" y="674" class="body">Self-hosted GitHub Actions runner</text>
-  <text x="476" y="698" class="body">Instance role for ECR publishing</text>
-  <text x="476" y="730" class="small">Restricted SSH/UI CIDRs</text>
-
-  <rect x="450" y="804" width="365" height="152" rx="14" class="card2"/>
-  <rect x="476" y="812" width="26" height="26" rx="7" fill="#142338" stroke="#4b678c"/><image href="../demo/assets/logos/rasterized/github.png" x="480" y="816" width="18" height="18" preserveAspectRatio="xMidYMid meet"/>
-  <text x="512" y="840" class="head">GitHub Actions runner</text>
-  <text x="476" y="870" class="body">Self-hosted Linux x64 service</text>
-  <text x="476" y="894" class="body">AWS CLI · kubectl · VPC access</text>
-  <text x="476" y="928" class="small">Applies manifests to private EKS API</text>
-
-  <rect x="862" y="584" width="300" height="372" rx="14" class="card"/>
-  <rect x="888" y="592" width="30" height="30" rx="7" fill="#f1f6ff" stroke="#dde8f9"/><image href="../demo/assets/logos/rasterized/kubernetes.png" x="892" y="596" width="22" height="22" preserveAspectRatio="xMidYMid meet"/>
-  <text x="928" y="620" class="head">EKS control plane</text>
-  <text x="888" y="650" class="body">ivolve-x-dev</text>
-  <text x="888" y="674" class="body">Private + CIDR-limited public API</text>
-  <line x1="888" y1="700" x2="1136" y2="700" stroke="#3e5878"/>
-  <text x="888" y="732" class="head">Private node group</text>
-  <text x="888" y="762" class="body">Two Ready t3.small workers</text>
-  <text x="888" y="786" class="body">EBS CSI + Pod Identity</text>
-  <image href="../demo/assets/logos/rasterized/flask.png" x="888" y="808" width="20" height="20" preserveAspectRatio="xMidYMid meet"/><text x="916" y="826" class="body">Auth API pod</text>
-  <image href="../demo/assets/logos/rasterized/springboot.png" x="888" y="832" width="20" height="20" preserveAspectRatio="xMidYMid meet"/><text x="916" y="850" class="body">Roadmap API pod</text>
-  <image href="../demo/assets/logos/rasterized/nodedotjs.png" x="888" y="856" width="20" height="20" preserveAspectRatio="xMidYMid meet"/><text x="916" y="874" class="body">Frontend pod</text>
-  <image href="../demo/assets/logos/rasterized/mysql.png" x="888" y="880" width="20" height="20" preserveAspectRatio="xMidYMid meet"/><text x="916" y="898" class="body">MySQL StatefulSet + gp3 PVC</text>
-  <text x="888" y="932" class="small">All workloads in namespace ivolve</text>
-
-  <rect x="1208" y="584" width="455" height="152" rx="14" class="card2"/>
-  <rect x="1234" y="592" width="30" height="30" rx="7" fill="#f1f6ff" stroke="#dde8f9"/><image href="../demo/assets/logos/aws/elb.png" x="1238" y="596" width="22" height="22" preserveAspectRatio="xMidYMid meet"/>
-  <text x="1274" y="620" class="head">Public subnet · Application Load Balancer</text>
-  <text x="1234" y="650" class="body">AWS Load Balancer Controller + Ingress</text>
-  <text x="1234" y="674" class="body">HTTP :80 → frontend ClusterIP Service</text>
-  <text x="1234" y="708" class="small">Health checks route traffic to ready frontend pods</text>
-
-  <rect x="1208" y="804" width="455" height="152" rx="14" class="card"/>
-  <rect x="1234" y="812" width="30" height="30" rx="7" fill="#f1f6ff" stroke="#dde8f9"/><image href="../../app/frontend/public/images/ivolve-logo.png" x="1238" y="816" width="22" height="22" preserveAspectRatio="xMidYMid meet"/>
-  <text x="1274" y="840" class="head">Browser / project user</text>
-  <text x="1234" y="870" class="body">Open ALB DNS address over HTTP</text>
-  <text x="1234" y="894" class="body">Sign up → login → view roadmap</text>
-  <text x="1234" y="928" class="small">Frontend calls Auth and Roadmap services internally</text>
-
-  <path d="M338 260 C380 260 385 600 424 600" class="flow"/>
-  <path d="M724 275 C770 275 770 300 802 300" class="flow"/>
-  <path d="M1020 345 V490 H1320 V514" class="deploy"/>
-  <text x="1080" y="478" class="small">GitHub Actions manifest trigger</text>
-  <path d="M815 880 H850" class="deploy"/><text x="817" y="864" class="small">kubectl apply -k</text>
-  <path d="M1162 665 H1198" class="flow"/><text x="1164" y="650" class="small">Ingress</text>
-  <path d="M1208 680 C1185 680 1184 810 1150 820" class="flow"/>
-  <path d="M1208 872 H1172" class="flow"/><text x="1176" y="858" class="small">HTTP :80</text>
-
-  <rect x="78" y="1000" width="1580" height="48" rx="12" fill="#0a1424" stroke="#263c59"/>
-  <circle cx="108" cy="1024" r="7" fill="#8db8ff"/><text x="124" y="1030" class="small">CI / source flow</text>
-  <circle cx="300" cy="1024" r="7" fill="#71ddb0"/><text x="316" y="1030" class="small">Deployment flow</text>
-  <circle cx="510" cy="1024" r="7" fill="#a5b7d0"/><text x="526" y="1030" class="small">Infrastructure provisioning/configuration (dashed)</text>
-  <text x="1090" y="1030" class="small">EKS / NAT / EC2 / ALB / EBS may incur AWS charges</text>
+  <rect width="1600" height="1060" rx="24" fill="url(#bg)"/>
+  <text x="54" y="68" class="title">iVolve × NTI | Cloud DevOps Architecture</text>
+  <text x="57" y="108" class="sub">GitHub Actions owns CI · Argo CD owns CD · Terraform provisions AWS</text>
+  <rect x="42" y="142" width="1516" height="314" rx="22" class="panel"/>
+  <text x="70" y="180" class="section">SOURCE CONTROL &amp; CONTINUOUS INTEGRATION</text>
+  <rect x="76" y="207" width="300" height="190" rx="18" class="card"/><image href="../demo/assets/logos/rasterized/github.png" x="98" y="228" width="38" height="38"/><text x="150" y="258" class="head">GitHub repository</text><text x="100" y="316" class="body">Application source</text><text x="100" y="348" class="body">Kubernetes manifests</text><text x="100" y="380" class="body">main branch desired state</text>
+  <rect x="434" y="207" width="330" height="190" rx="18" class="card2"/><image href="../demo/assets/logos/rasterized/github.png" x="456" y="228" width="38" height="38"/><text x="508" y="258" class="head">GitHub Actions · CI</text><text x="458" y="316" class="body">Hosted runner builds services</text><text x="458" y="348" class="body">Trivy scans container images</text><text x="458" y="380" class="body">Immutable commit SHA tags</text>
+  <rect x="822" y="207" width="300" height="190" rx="18" class="card"/><image href="../demo/assets/logos/aws/ecr.png" x="844" y="228" width="38" height="38"/><text x="896" y="258" class="head">Amazon ECR</text><text x="846" y="316" class="body">Private repositories</text><text x="846" y="348" class="body">frontend · auth · roadmap</text><text x="846" y="380" class="body">Commit tagged images</text>
+  <rect x="1180" y="207" width="330" height="190" rx="18" class="card"/><image href="../demo/assets/logos/rasterized/github.png" x="1202" y="228" width="38" height="38"/><text x="1254" y="258" class="head">Manifest update</text><text x="1204" y="316" class="body">CI commits image references</text><text x="1204" y="348" class="body">Argo CD watches this branch</text><text x="1204" y="380" class="body">No workflow kubectl deploy</text>
+  <path d="M376 302H423M764 302H811M1122 302H1169" class="arrow"/>
+  <rect x="42" y="490" width="1516" height="510" rx="22" fill="#14243b" stroke="#426186" stroke-width="2"/><text x="70" y="530" class="section">AWS CLOUD · eu-north-1</text>
+  <rect x="76" y="568" width="330" height="180" rx="18" class="card"/><image href="../demo/assets/logos/rasterized/terraform.png" x="98" y="590" width="38" height="38"/><text x="150" y="620" class="head">Terraform + S3</text><text x="100" y="678" class="body">VPC · subnets · NAT · ACLs</text><text x="100" y="710" class="body">EKS · ECR · IAM · remote state</text>
+  <rect x="76" y="782" width="330" height="160" rx="18" class="card"/><image href="../demo/assets/logos/aws/ecr.png" x="98" y="804" width="38" height="38"/><text x="150" y="834" class="head">CI identity</text><text x="100" y="882" class="body">Existing IAM user, ECR push only</text><text x="100" y="914" class="body">No EKS deployment access</text>
+  <rect x="452" y="550" width="1068" height="390" rx="20" fill="#0c192a" stroke="#5a799e" stroke-width="2"/><text x="480" y="590" class="section">VPC · TWO AVAILABILITY ZONES</text>
+  <rect x="492" y="628" width="338" height="230" rx="18" class="card2"/><image href="../demo/assets/logos/rasterized/kubernetes.png" x="514" y="650" width="38" height="38"/><text x="566" y="680" class="head">Amazon EKS</text><text x="516" y="738" class="body">ivolve-x-dev · two workers</text><text x="516" y="770" class="body">Argo CD watches Git desired state</text><text x="516" y="802" class="body">Argo CD syncs the dev overlay</text><text x="516" y="834" class="body">Namespace: ivolve</text>
+  <rect x="866" y="628" width="278" height="230" rx="18" class="card"/><image href="../demo/assets/logos/aws/elb.png" x="888" y="650" width="38" height="38"/><text x="940" y="680" class="head">Public ALB</text><text x="890" y="738" class="body">Load Balancer Controller</text><text x="890" y="770" class="body">Ingress routes HTTP to</text><text x="890" y="802" class="body">frontend ClusterIP service</text>
+  <rect x="1180" y="628" width="290" height="230" rx="18" class="card"/><image href="../../app/frontend/public/images/ivolve-logo.png" x="1202" y="650" width="38" height="38"/><text x="1254" y="680" class="head">Application</text><text x="1204" y="738" class="body">Frontend + Auth API</text><text x="1204" y="770" class="body">Roadmap API + MySQL</text><text x="1204" y="802" class="body">MySQL data on gp3 EBS</text>
+  <path d="M830 744H855M1144 744H1169" class="deploy"/><path d="M1320 397V470" class="deploy"/>
+  <text x="58" y="1042" class="head">CODE CHANGE → BUILD + SCAN → ECR → GIT MANIFEST → ARGO CD SYNC → EKS</text>
 </svg>

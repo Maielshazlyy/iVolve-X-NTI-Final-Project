@@ -1,44 +1,35 @@
-# AWS Infrastructure with Terraform
+# Terraform and AWS Infrastructure
 
-This is the single guide for everything under `terraform/`: backend bootstrap, the deployed dev environment, reusable modules, required inputs, verification, and operational safety. Terraform provisions the IVOLVE environment in `eu-north-1`.
+This guide covers the Terraform configuration under `terraform/`: the S3 state backend, AWS dev environment, reusable modules, commands, and operational notes. The design provisions an AWS network and EKS/ECR platform for the application. GitHub Actions is the CI system; Argo CD handles CD. Jenkins EC2 and its Ansible setup have been removed.
 
-## What Terraform manages
+## Resources managed
 
-- A VPC across two Availability Zones, public/private subnets, Internet Gateway, NAT Gateway, routes, subnet tags, and stateless Network ACLs.
-- A restricted Jenkins EC2 controller with an instance profile and repository-scoped ECR publishing permissions.
-- An EKS control plane, private managed worker group, cluster access, EKS Pod Identity, the EBS CSI add-on, and IAM resources for the AWS Load Balancer Controller.
+- VPC in two Availability Zones with public/private subnets, Internet Gateway, a cost-conscious shared NAT Gateway, routes, subnet tags, and public/private Network ACLs.
+- EKS control plane and managed worker group across private subnets, EBS CSI driver with Pod Identity, and IAM resources for the AWS Load Balancer Controller.
 - Private ECR repositories for `frontend`, `auth-service`, and `roadmap-service`.
-- Namespace-scoped EKS access for the GitHub Actions deploy identity.
-- A versioned, encrypted S3 bucket for the dev Terraform state. The bootstrap root keeps its own state locally.
+- Existing IAM user policy allowing GitHub Actions CI to push images only to the project's ECR repositories.
+- Encrypted, versioned S3 bucket for remote dev state.
 
-## Current deployment
+Terraform does not install Argo CD itself. Follow [`../argocd/README.md`](../argocd/README.md) to install it and register the Kubernetes Application.
 
-- The VPC, EKS cluster `ivolve-x-dev`, and worker group are deployed; two `t3.small` worker nodes were confirmed `Ready`.
-- Jenkins runs on the Terraform-managed EC2 host and is configured by Ansible.
-- ECR has the three service repositories, and EKS runs the app plus MySQL.
-- The public and private Network ACLs were applied, followed by successful node, pod, and Ingress checks.
-- The dev state is remote in S3 with key `ivolve-x/dev/terraform.tfstate`; the bucket name is account-specific and comes from the bootstrap output.
-- The last reported full dev plan after applying the ACLs returned `No changes`.
-
-## Folder map
+## Directory map
 
 | Path | Purpose |
 |---|---|
-| `bootstrap/state-backend/` | One-time creation of the private, encrypted, versioned S3 state bucket. |
-| `environments/dev/` | Root configuration for the running dev environment; composes all modules and uses the S3 backend. |
-| `modules/network/` | VPC, subnets, Internet/NAT routes, subnet tags, and public/private ACLs. One shared NAT Gateway is the lower-cost default. |
-| `modules/jenkins/` | Ubuntu EC2 controller, instance profile, restricted admin access, encrypted gp3 volume, IMDSv2, and scoped ECR push policy. |
-| `modules/eks/` | EKS control plane, private managed nodes, cluster access, Pod Identity, EBS CSI, and Load Balancer Controller IAM role/policy. Add-on versions are pinned to the verified versions. |
-| `modules/ecr/` | Private repositories with push scanning, encryption, immutable tags, and untagged-image cleanup. |
-| `modules/github-actions/` | Dedicated IAM deploy identity and namespace-scoped EKS access. The AWS organization SCP blocked creation of the GitHub OIDC provider, so the current workflow uses dedicated access-key secrets. |
+| `bootstrap/state-backend/` | One-time creation of the encrypted, versioned S3 state bucket. |
+| `environments/dev/` | Root configuration that composes network, EKS, ECR, and GitHub Actions CI IAM modules. |
+| `modules/network/` | VPC, subnets, gateways, routes, and network ACLs. |
+| `modules/eks/` | EKS cluster and nodes, Pod Identity, EBS CSI, and Load Balancer Controller IAM. |
+| `modules/ecr/` | Private service image repositories. |
+| `modules/github-actions/` | Least-privilege ECR push policy for the existing GitHub Actions IAM user. |
 
-## Prerequisites and authentication
+## Prerequisites
 
-Use Terraform 1.10 or newer, AWS CLI v2, an authorized AWS identity, and PowerShell. `kubectl` and Helm are needed to verify the cluster and install the AWS Load Balancer Controller. Authenticate with the approved AWS login flow before running Terraform; credentials must be active to refresh remote state and read live AWS resources.
+Use Terraform 1.10+, AWS CLI v2, an authorized AWS identity, and PowerShell. `kubectl` and Helm are needed for cluster operations. Authenticate before Terraform commands that read remote state or AWS resources. Do not put credentials in Terraform files.
 
-## Bootstrap the S3 state backend
+## Bootstrap remote state
 
-The backend bucket must exist before the dev environment can use it. From PowerShell at the repository root:
+The backend must exist before the dev state can be stored in it. From the repository root:
 
 ```powershell
 Set-Location terraform/bootstrap/state-backend
@@ -49,7 +40,7 @@ terraform apply
 terraform output -raw state_bucket_name
 ```
 
-The bucket bootstrap intentionally uses local state because a Terraform backend cannot create itself. On an authorized workstation, create the ignored backend config from the example, check its bucket value against the bootstrap output, then migrate the existing dev state:
+Create the ignored backend configuration from the example, confirm the bucket name matches the bootstrap output, and migrate existing state:
 
 ```powershell
 Copy-Item terraform/environments/dev/backend.hcl.example terraform/environments/dev/backend.hcl
@@ -59,17 +50,15 @@ terraform state list
 terraform plan
 ```
 
-Confirm the migration when prompted. Keep the local pre-migration state recovery copy until the S3 state is confirmed and a full plan shows no unintended changes.
+Keep a recovery copy until the state is visible in S3 and a full plan has no unexpected changes.
 
 ## Plan and apply the dev environment
 
-From `terraform/environments/dev`, set trusted administrator CIDRs and an existing EC2 key pair. Use the current public IP, not a previously recorded one:
+From `terraform/environments/dev`, set the current public IP for the EKS public API allow-list:
 
 ```powershell
 $publicIp = (Invoke-RestMethod "https://checkip.amazonaws.com").Trim()
 $env:TF_VAR_cluster_endpoint_public_access_cidrs = ConvertTo-Json -InputObject @("$publicIp/32") -Compress
-$env:TF_VAR_jenkins_admin_cidrs = ConvertTo-Json -InputObject @("$publicIp/32") -Compress
-$env:TF_VAR_jenkins_key_name = "lab28-ansible"
 
 terraform init -backend-config=backend.hcl
 terraform state list
@@ -78,13 +67,15 @@ terraform validate
 terraform plan
 ```
 
-If the Ansible control host also needs SSH access to Jenkins, append its current public egress IP with `/32` to `TF_VAR_jenkins_admin_cidrs`. Never use `0.0.0.0/0` for Jenkins SSH or its web UI. Inspect every planned CIDR, resource replacement, EKS add-on, and cost before applying:
+Review the full plan before applying. Terraform no longer asks for Jenkins key names, Jenkins admin CIDRs, or an EC2 size. The plan should remove the Jenkins EC2 module and its related permissions/security group; it should not destroy EKS, ECR, the VPC, or the S3 backend. Apply only after confirming that the plan matches that expectation:
 
 ```powershell
 terraform apply
 ```
 
-## Verify the deployed cluster
+This change does not delete the pre-existing IAM user or its access keys. It updates the Terraform-managed inline IAM policy to authorize ECR image publishing for the CI workflow.
+
+## Verify EKS
 
 ```powershell
 $awsExe = "$env:LOCALAPPDATA\Programs\Amazon\AWSCLIV2\aws.exe"
@@ -97,11 +88,12 @@ kubectl get ingress -n ivolve
 terraform plan
 ```
 
-Expected: the kube context points to `ivolve-x-dev`, nodes are `Ready`, app and MySQL pods are ready, the MySQL PVC is `Bound`, the Ingress has an ALB address, and Terraform has no unreviewed drift. The Load Balancer Controller is installed once by a cluster administrator with Helm; its commands and the application manifests are in [`../kubernetes/README.md`](../kubernetes/README.md).
+Expected: EKS nodes are `Ready`, the application and MySQL pods are healthy, the MySQL PVC is `Bound`, and the frontend Ingress has an ALB address. Install the AWS Load Balancer Controller once with cluster-admin privileges; its commands are in [`../kubernetes/README.md`](../kubernetes/README.md).
 
-## State, secrets, and cost
+## Cost and data retention
 
-- Do not commit `backend.hcl`, Terraform state, `.terraform/`, plan files, AWS credentials, private keys, or secret `.tfvars` files.
-- State contains sensitive infrastructure data; restrict S3 access to authorized operators and keep the recovery copy until migration is verified.
-- EKS hours, EC2 instances, NAT Gateway, ALB, public IPv4 addresses, EBS volumes, ECR storage, and data transfer can incur AWS charges. Review the current AWS bill and plan a deliberate teardown when the learning environment is no longer needed.
-- Network ACLs are stateless. Missing return-path rules can interrupt NAT egress, ECR pulls, EKS API traffic, ALB health checks, SSH, and Jenkins UI access. Review the full plan before changing ACLs on live subnets.
+- The VPC, EKS, worker EC2, NAT Gateway, ALB, public IPv4, EBS volumes, ECR storage, and data transfer can incur charges. Stopping worker nodes alone does not stop all EKS/NAT/ALB charges.
+- Before destroying infrastructure, back up MySQL data and export any ECR images that must be retained. The MySQL StorageClass has `Delete` reclaim policy; deleting its PVC can delete its EBS volume.
+- Use `terraform plan -destroy` and inspect the complete resource list before any teardown. Keep the S3 state bucket until all state-managed resources are intentionally removed and the state is no longer needed.
+- Do not commit `backend.hcl`, Terraform state, `.terraform/`, plan files, AWS credentials, SSH keys, or secret `.tfvars` files.
+- Network ACLs are stateless; inspect return-path rules before changing live ACLs.

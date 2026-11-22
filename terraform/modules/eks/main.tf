@@ -2,18 +2,6 @@ data "aws_eks_cluster_versions" "available" {
   default_only = true
 }
 
-data "aws_eks_addon_version" "pod_identity_agent" {
-  addon_name         = "eks-pod-identity-agent"
-  kubernetes_version = aws_eks_cluster.this.version
-  most_recent        = true
-}
-
-data "aws_eks_addon_version" "ebs_csi" {
-  addon_name         = "aws-ebs-csi-driver"
-  kubernetes_version = aws_eks_cluster.this.version
-  most_recent        = true
-}
-
 locals {
   common_tags = {
     Project     = var.project_name
@@ -67,15 +55,6 @@ resource "aws_eks_cluster" "this" {
   depends_on = [aws_iam_role_policy_attachment.cluster_policy]
 }
 
-resource "aws_vpc_security_group_ingress_rule" "runner_to_cluster_api" {
-  security_group_id            = aws_eks_cluster.this.vpc_config[0].cluster_security_group_id
-  referenced_security_group_id = var.runner_security_group_id
-  ip_protocol                  = "tcp"
-  from_port                    = 443
-  to_port                      = 443
-  description                  = "Allow the self-hosted GitHub Actions runner to reach the private EKS API endpoint."
-}
-
 data "aws_iam_policy_document" "ebs_csi_pod_identity_trust" {
   statement {
     effect  = "Allow"
@@ -102,7 +81,7 @@ resource "aws_iam_role_policy_attachment" "ebs_csi" {
 resource "aws_eks_addon" "pod_identity_agent" {
   cluster_name  = aws_eks_cluster.this.name
   addon_name    = "eks-pod-identity-agent"
-  addon_version = data.aws_eks_addon_version.pod_identity_agent.version
+  addon_version = "v1.5.0-eksbuild.3"
 
   depends_on = [aws_eks_node_group.this]
 }
@@ -110,7 +89,7 @@ resource "aws_eks_addon" "pod_identity_agent" {
 resource "aws_eks_addon" "ebs_csi" {
   cluster_name  = aws_eks_cluster.this.name
   addon_name    = "aws-ebs-csi-driver"
-  addon_version = data.aws_eks_addon_version.ebs_csi.version
+  addon_version = "v1.68.0-eksbuild.1"
 
   depends_on = [
     aws_eks_addon.pod_identity_agent,

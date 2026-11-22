@@ -33,11 +33,6 @@ variable "cluster_endpoint_public_access_cidrs" {
   }
 }
 
-variable "runner_security_group_id" {
-  description = "Security group attached to the self-hosted GitHub Actions runner that needs private EKS API access."
-  type        = string
-}
-
 variable "node_instance_types" {
   description = "EC2 instance types for the EKS managed node group."
   type        = list(string)

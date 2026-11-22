@@ -38,7 +38,7 @@ SCENES = [
         "title": "IVOLVE × NTI",
         "subtitle": "A cloud DevOps delivery platform",
         "caption": "From a training application in source control to a live deployment on Amazon EKS.",
-        "nodes": [("github", "SOURCE", "GitHub"), ("jenkins", "BUILD", "Jenkins"), ("kubernetes", "DEPLOY", "Amazon EKS"), ("aws:elb", "LIVE", "AWS ALB")],
+        "nodes": [("github", "SOURCE", "GitHub"), ("github", "CI", "GitHub Actions"), ("kubernetes", "CD", "Argo CD · EKS"), ("aws:elb", "LIVE", "AWS ALB")],
         "accent": BLUE,
     },
     {
@@ -61,44 +61,36 @@ SCENES = [
         "section": "03 · INFRASTRUCTURE AS CODE",
         "title": "Terraform builds AWS",
         "subtitle": "Network, compute, registry, and remote state",
-        "caption": "Terraform provisions a VPC across two Availability Zones, public and private subnets, EKS, ECR, Jenkins EC2, and encrypted S3 state.",
-        "nodes": [("terraform", "INFRASTRUCTURE", "Terraform"), ("aws:ec2", "COMPUTE", "Jenkins EC2"), ("aws:ecr", "REGISTRY", "Amazon ECR"), ("aws:s3", "REMOTE STATE", "Amazon S3")],
+        "caption": "Terraform provisions a VPC across two Availability Zones, public and private subnets, EKS, ECR, and encrypted S3 state.",
+        "nodes": [("terraform", "INFRASTRUCTURE", "Terraform"), ("aws:ec2", "COMPUTE", "EKS worker nodes"), ("aws:ecr", "REGISTRY", "Amazon ECR"), ("aws:s3", "REMOTE STATE", "Amazon S3")],
         "accent": BLUE,
     },
     {
-        "section": "04 · CONFIGURATION MANAGEMENT",
-        "title": "Ansible configures Jenkins",
-        "subtitle": "Repeatable host setup over SSH",
-        "caption": "Ansible discovers the Jenkins EC2 host and installs Java, Docker, Trivy, and Jenkins configuration through reusable roles.",
-        "nodes": [("ansible", "CONTROL", "Ansible"), ("aws:ec2", "HOST", "Jenkins EC2"), ("jenkins", "CONTROLLER", "Jenkins"), ("docker", "BUILD TOOLS", "Docker + Trivy")],
-        "accent": GREEN,
-    },
-    {
-        "section": "05 · CONTINUOUS INTEGRATION",
-        "title": "Three service pipelines",
+        "section": "04 · CONTINUOUS INTEGRATION",
+        "title": "GitHub Actions builds services",
         "subtitle": "Frontend · Auth · Roadmap",
-        "caption": "Each Jenkins pipeline checks out the code, builds its service image on a Docker build agent, and runs a Trivy vulnerability scan.",
-        "nodes": [("jenkins", "CI", "Jenkins pipelines"), ("docker", "AGENT", "Docker build agent"), ("nodedotjs", "SERVICE", "Frontend"), ("springboot", "SERVICE", "Java Roadmap API")],
+        "caption": "GitHub Actions builds each service image on hosted runners and scans the images with Trivy before publishing.",
+        "nodes": [("github", "CI", "GitHub Actions"), ("docker", "BUILD", "Docker images"), ("trivy", "SECURITY", "Trivy scan"), ("aws:ecr", "REGISTRY", "Amazon ECR")],
         "accent": PURPLE,
     },
     {
-        "section": "06 · IMAGE DELIVERY",
+        "section": "05 · IMAGE DELIVERY",
         "title": "Scan, publish, record",
         "subtitle": "Trivy → Amazon ECR → Git commit",
-        "caption": "Passing images are pushed to private ECR repositories. Jenkins updates the matching Kubernetes manifest with the new image tag and commits it.",
+        "caption": "Passing images are pushed to private ECR repositories with immutable commit tags. GitHub Actions updates the matching Kubernetes manifest in Git.",
         "nodes": [("trivy", "SECURITY SCAN", "Trivy"), ("aws:ecr", "IMAGE REGISTRY", "Amazon ECR"), ("github", "MANIFEST", "Image tag"), ("github", "CHANGE", "Git commit")],
         "accent": GREEN,
     },
     {
-        "section": "07 · CONTINUOUS DELIVERY",
-        "title": "GitHub Actions deploys",
-        "subtitle": "A manifest change starts the workflow",
-        "caption": "The deployment workflow configures AWS and kubectl, applies the development overlay, waits for MySQL and application rollouts, and reports the deployed resources.",
-        "nodes": [("github", "TRIGGER", "Manifest push"), ("github", "WORKFLOW", "GitHub Actions"), ("kubernetes", "DEPLOY", "Kustomize to EKS"), ("kubernetes", "VERIFY", "Rollout status")],
+        "section": "06 · CONTINUOUS DELIVERY",
+        "title": "Argo CD syncs from Git",
+        "subtitle": "Git is the desired state",
+        "caption": "Argo CD watches the dev overlay in Git and continuously reconciles its Kubernetes resources into Amazon EKS.",
+        "nodes": [("github", "SOURCE", "Kubernetes manifests"), ("kubernetes", "CD CONTROLLER", "Argo CD"), ("kubernetes", "SYNC", "Amazon EKS"), ("kubernetes", "HEALTH", "Workload status")],
         "accent": BLUE,
     },
     {
-        "section": "08 · KUBERNETES",
+        "section": "07 · KUBERNETES",
         "title": "EKS runs the application",
         "subtitle": "Healthy pods and persistent MySQL storage",
         "caption": "The EKS cluster runs the frontend, Auth API, Roadmap API, and MySQL StatefulSet. The EBS CSI driver provisions the gp3 database volume.",
@@ -106,7 +98,7 @@ SCENES = [
         "accent": PURPLE,
     },
     {
-        "section": "09 · USER ACCESS",
+        "section": "08 · USER ACCESS",
         "title": "AWS ALB serves the app",
         "subtitle": "Browser → Ingress → frontend → APIs",
         "caption": "The AWS Load Balancer Controller creates an Application Load Balancer. It routes browser traffic to the frontend, which calls the APIs inside the cluster.",
@@ -117,8 +109,8 @@ SCENES = [
         "section": "END-TO-END DELIVERY",
         "title": "Code becomes a live service",
         "subtitle": "Build · scan · publish · deploy · verify",
-        "caption": "Together, Terraform, Ansible, Jenkins, Trivy, ECR, Kubernetes, and GitHub Actions create a repeatable path from a code change to the live training roadmap.",
-        "nodes": [("terraform", "01 · IaC", "Provision AWS"), ("ansible", "02 · CONFIG", "Prepare Jenkins"), ("jenkins", "03 · CI", "Build + scan"), ("kubernetes", "04 · CD", "Deploy + verify")],
+        "caption": "Terraform provisions AWS, GitHub Actions builds and scans images, and Argo CD syncs Git manifests into Kubernetes.",
+        "nodes": [("terraform", "01 · IaC", "Provision AWS"), ("github", "02 · CI", "Build + scan"), ("aws:ecr", "03 · REGISTRY", "Publish images"), ("kubernetes", "04 · CD", "Argo CD syncs EKS")],
         "accent": BLUE,
     },
 ]
@@ -302,7 +294,7 @@ def draw_scene(scene, index, total, vertical=False, include_explanations=True):
             for line in lines[:2]:
                 draw.text((margin + 30, y), line, font=body_font, fill=TEXT)
                 y += 38
-        draw.text((margin, height - 42), "TERRAFORM  ·  ANSIBLE  ·  JENKINS  ·  TRIVY  ·  EKS  ·  GITHUB ACTIONS", font=font(16, True), fill=MUTED)
+        draw.text((margin, height - 42), "TERRAFORM  ·  GITHUB ACTIONS  ·  TRIVY  ·  ECR  ·  ARGO CD  ·  EKS", font=font(16, True), fill=MUTED)
     return image.convert("RGB")
 
 

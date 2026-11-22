@@ -16,6 +16,7 @@ crash.log
 *.tfvars
 !*.tfvars.example
 terraform/environments/dev/backend.hcl
+kubernetes/app-secrets.local
 
 # Ansible secrets and generated files
 *.retry
@@ -30,4 +31,5 @@ inventory.ini
 
 # Local generated output
 out/
+.codex-video-tmp/
 *.log

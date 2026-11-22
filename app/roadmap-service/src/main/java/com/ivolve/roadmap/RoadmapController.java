@@ -32,7 +32,7 @@ public class RoadmapController {
             ),
             Map.of(
                 "title", "CI/CD",
-                "description", "Learn Jenkins for continuous integration and GitHub Actions for automated deployment."
+                "description", "Learn GitHub Actions for continuous integration and Argo CD for automated deployment."
             ),
             Map.of(
                 "title", "Cloud",
