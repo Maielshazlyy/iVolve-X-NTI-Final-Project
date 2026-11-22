@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: roadmap-service
-          image: 335452653010.dkr.ecr.eu-north-1.amazonaws.com/ivolve-x/dev/roadmap-service:7
+          image: 335452653010.dkr.ecr.eu-north-1.amazonaws.com/ivolve-x/dev/roadmap-service:a57004061fe5d19c433a9fdfc71895945dcfb935-2
           imagePullPolicy: Always
           ports:
             - name: http
