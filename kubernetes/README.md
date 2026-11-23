@@ -48,6 +48,33 @@ kubectl get ingress -n ivolve
 
 Argo CD UI/CLI can show the Application's detailed sync and health state. `kubectl` is for verification and authorized administration, not the CI/CD handoff.
 
+## Rollouts on the two-node dev cluster
+
+The dev EKS nodes currently report capacity for 11 Pods each. During an image update, the default Deployment rolling strategy can request a temporary extra Pod (`maxSurge`) while keeping the previous Pod available. If both nodes have reached their Pod capacity, the new Pod remains `Pending` with a `Too many pods` scheduling event even while the old application Pod continues to serve traffic.
+
+The three single-replica application Deployments set this strategy in their manifests:
+
+```yaml
+strategy:
+  type: RollingUpdate
+  rollingUpdate:
+    maxSurge: 0
+    maxUnavailable: 1
+```
+
+This avoids requesting an extra Pod during a rollout and does not add AWS worker capacity. Since each service has one replica, Kubernetes may stop its old Pod before the replacement is ready; expect a brief service interruption during an update. This tradeoff is for the cost-conscious dev cluster, not a highly available production rollout.
+
+To diagnose a future rollout that stays `Pending`, check the node Pod capacity, Deployment state, and the Pending Pod's scheduler events:
+
+```powershell
+kubectl get nodes -o custom-columns=NAME:.metadata.name,MAX-PODS:.status.capacity.pods,ALLOCATABLE-PODS:.status.allocatable.pods
+kubectl get deployments -n ivolve
+kubectl get pods -n ivolve
+kubectl describe pod <pending-pod-name> -n ivolve
+```
+
+If the event says `Too many pods`, check the Deployment strategy in Git and Argo CD sync status before considering additional worker nodes, which increase AWS cost.
+
 ## AWS Load Balancer Controller
 
 The Terraform EKS module provisions its Pod Identity role and association. Install the controller Helm chart once with cluster-admin access; see the Terraform module and commands documented in [`../terraform/README.md`](../terraform/README.md). The Ingress exposes the frontend through an internet-facing ALB.
