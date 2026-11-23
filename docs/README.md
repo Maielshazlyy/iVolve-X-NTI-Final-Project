@@ -27,12 +27,26 @@ The videos explain the application and Docker Compose, Terraform, GitHub Actions
 
 ## Evidence screenshots
 
-These captures document the local stack, application, and EKS deployment. Older Jenkins and direct GitHub Actions-to-EKS deployment screenshots are intentionally omitted because that architecture has been replaced by GitHub Actions CI plus Argo CD CD.
+These captures document the local stack, the CI/CD handoff, and the running EKS application. Older Jenkins and direct GitHub Actions-to-EKS deployment screenshots are intentionally omitted because that architecture has been replaced by GitHub Actions CI plus Argo CD CD.
 
 <details>
 <summary>Docker Compose started the local services</summary>
 
 ![Docker Compose build and local services](images/evidence/docker-compose-started.png)
+
+</details>
+
+<details>
+<summary>GitHub Actions built, scanned, and published service images</summary>
+
+![Successful GitHub Actions CI run showing image build, Trivy scans, ECR publishing, and manifest update](images/evidence/github-actions-ci-success.png)
+
+</details>
+
+<details>
+<summary>Argo CD synced the Git revision and reported the application healthy</summary>
+
+![Argo CD application showing Healthy, Synced, and a successful sync](images/evidence/argocd-healthy-synced.png)
 
 </details>
 

@@ -67,6 +67,31 @@ Install Argo CD in the cluster, create the `app-secrets` Secret without committi
 
 Screenshots and the project walkthrough video are collected in [`docs/README.md`](docs/README.md). The repository includes evidence of the local Compose stack, the application through the ALB, healthy EKS nodes and workloads, successful CI runs, and successful Argo CD synchronization when available.
 
+<details>
+<summary>View project screenshots</summary>
+
+### Local Docker Compose
+
+![Local Docker Compose services started](docs/images/evidence/docker-compose-started.png)
+
+### GitHub Actions CI
+
+![GitHub Actions successfully built and scanned images, published to ECR, and updated manifests](docs/images/evidence/github-actions-ci-success.png)
+
+### Argo CD continuous delivery
+
+![Argo CD application is Healthy and Synced](docs/images/evidence/argocd-healthy-synced.png)
+
+### EKS workloads and persistent storage
+
+![EKS nodes and application workloads are healthy, with MySQL storage and Ingress](docs/images/evidence/eks-workloads-healthy.png)
+
+### Application through the AWS ALB
+
+![iVolve application served through the AWS Application Load Balancer](docs/images/evidence/application-live-on-alb.png)
+
+</details>
+
 ## Operational and security notes
 
 - Never commit `.env` files, `kubernetes/app-secrets.local`, AWS access keys, GitHub tokens, SSH keys, Terraform state, or secret backend configuration.
