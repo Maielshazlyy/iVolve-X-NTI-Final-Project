@@ -6,9 +6,9 @@ The application includes a frontend, an authentication API, a roadmap API, and M
 
 ## Project walkthrough
 
-[![Watch the iVolve project walkthrough](docs/demo/ivolve-devops-explainer-no-captions-cover.png)](https://raw.githubusercontent.com/Maielshazlyy/iVolve-X-NTI-Final-Project/main/docs/demo/ivolve-devops-explainer-no-captions.mp4)
+[▶ **Play the project walkthrough**](https://raw.githubusercontent.com/Maielshazlyy/iVolve-X-NTI-Final-Project/main/docs/demo/ivolve-devops-explainer-no-captions.mp4)
 
-Select the preview to play the project walkthrough.
+[![Play the iVolve project walkthrough](docs/demo/ivolve-devops-explainer-play-cover.png)](https://raw.githubusercontent.com/Maielshazlyy/iVolve-X-NTI-Final-Project/main/docs/demo/ivolve-devops-explainer-no-captions.mp4)
 
 ## Project requirements and implementation
 
