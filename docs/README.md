@@ -1,6 +1,6 @@
 # Architecture, Evidence, and Demo
 
-This guide covers documentation artifacts in `docs/`: the branded architecture image, user-provided evidence captures, and project walkthrough videos. The architecture and video source scripts reflect the current delivery model: GitHub Actions handles CI, and Argo CD handles CD. Jenkins and the Jenkins-specific Ansible host configuration were removed from the project.
+This guide presents the branded architecture image, project walkthrough videos, and evidence captures. The current delivery model uses GitHub Actions for CI and Argo CD for CD; Jenkins and its Jenkins-specific Ansible host configuration were removed from the project.
 
 ## Architecture diagram
 
@@ -23,7 +23,7 @@ The silent video set is designed for GitHub/portfolio and LinkedIn. It uses the 
 | GitHub / portfolio, clean | [`demo/ivolve-devops-explainer-no-captions.mp4`](demo/ivolve-devops-explainer-no-captions.mp4) | [`demo/ivolve-devops-explainer-no-captions-cover.png`](demo/ivolve-devops-explainer-no-captions-cover.png) | None |
 | LinkedIn, clean | [`demo/ivolve-devops-linkedin-no-captions.mp4`](demo/ivolve-devops-linkedin-no-captions.mp4) | [`demo/ivolve-devops-linkedin-no-captions-cover.png`](demo/ivolve-devops-linkedin-no-captions-cover.png) | None |
 
-The videos explain the application and Docker Compose, Terraform, GitHub Actions CI, Trivy, ECR, Argo CD CD, EKS workloads, persistent MySQL storage, and the public ALB.
+The videos explain the application and Docker Compose, Terraform, GitHub Actions CI, Trivy, ECR, Argo CD, EKS workloads, persistent MySQL storage, and the public ALB.
 
 ## Evidence screenshots
 
@@ -64,15 +64,4 @@ These captures document the local stack, the CI/CD handoff, and the running EKS 
 
 </details>
 
-## Regenerate the assets and videos
-
-From the repository root on Windows, use Python with Pillow and FFmpeg built with `libx264`:
-
-```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -STA -File docs/demo/render_simple_icons.ps1
-python docs/images/render_architecture.py
-python docs/demo/generate_explainer.py --ffmpeg "C:\tools\ffmpeg\bin\ffmpeg.exe"
-python docs/demo/generate_explainer.py --ffmpeg "C:\tools\ffmpeg\bin\ffmpeg.exe" --no-captions
-```
-
-The generator writes the widescreen and vertical silent videos, cover images, and separate `.srt` captions. Its content is sourced from [`demo/generate_explainer.py`](demo/generate_explainer.py). Logo license information is in [`demo/assets/SIMPLE-ICONS-LICENSE.md`](demo/assets/SIMPLE-ICONS-LICENSE.md).
+Logo license information for the project visuals is in [`demo/assets/SIMPLE-ICONS-LICENSE.md`](demo/assets/SIMPLE-ICONS-LICENSE.md).

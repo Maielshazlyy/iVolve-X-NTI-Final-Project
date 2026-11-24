@@ -79,7 +79,7 @@ Continue with the [Argo CD guide](argocd/README.md) for installation, Applicatio
 
 The documentation includes the branded architecture diagram, evidence screenshots for local Compose, successful CI, Argo CD health, EKS workloads, and the live application, plus project walkthrough videos. The evidence shows the current GitHub Actions CI → Git manifests → Argo CD CD flow.
 
-Continue with the [documentation guide](docs/README.md) to view the evidence and videos, and to find instructions for regenerating the visual assets.
+Continue with the [documentation guide](docs/README.md) to view the architecture, project videos, and evidence screenshots.
 
 ## Verification evidence
 
