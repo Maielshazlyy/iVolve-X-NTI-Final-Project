@@ -31,37 +31,51 @@ Application change
 
 Terraform provisions the AWS foundation and stores dev state remotely in S3. The AWS Load Balancer Controller handles the public ALB; Argo CD manages the application resources declared in Git.
 
-## Repository guides
+## Project sections
 
-Each major folder has **one README at its top level**. The guide describes all files and commands for that folder; subfolders do not have separate README files.
+Each section below summarizes what this project implements. Follow its guide for the file map, prerequisites, exact commands, troubleshooting, and verification steps. The section guides are the detailed instructions; this README is the project overview.
 
-| Guide | Covers |
-|---|---|
-| [`app/README.md`](app/README.md) | Service layout, local development, and application behavior. |
-| [`docker/README.md`](docker/README.md) | Local Compose setup, environment values, build, run, and cleanup. |
-| [`terraform/README.md`](terraform/README.md) | S3 backend bootstrap, AWS modules, plan/apply, verification, and safe teardown. |
-| [`kubernetes/README.md`](kubernetes/README.md) | Manifests, secrets, Argo CD bootstrap/Application, sync, and workload checks. |
-| [`.github/README.md`](.github/README.md) | CI workflow, required GitHub secrets, triggers, image publishing, and manifest updates. |
-| [`argocd/README.md`](argocd/README.md) | Installing Argo CD and registering the dev Application. |
-| [`docs/README.md`](docs/README.md) | Architecture image, demo videos, evidence screenshots, and regeneration steps. |
+### 1. Application source
 
-## Start here
+The application is split into a browser-facing frontend, an authentication API, a roadmap API, and a MySQL database. The frontend handles sign-in and the training dashboard; the APIs provide application functions and use MySQL for persistent data. Keeping each service in its own folder lets the local Compose stack and cloud deployment build and release them independently.
 
-### Local application
+Continue with the [application guide](app/README.md) for the service layout, technology choices, configuration, and local development notes.
 
-Follow [`docker/README.md`](docker/README.md) to create local environment values and launch the complete stack. The source services are under `app/frontend/`, `app/auth-service/`, and `app/roadmap-service/`.
+### 2. Local containerization with Docker Compose
 
-### AWS foundation
+Docker Compose builds and runs the frontend, both APIs, and MySQL together on a developer machine. The services communicate over the Compose network; configuration is supplied through a local environment file, and health checks help indicate when the dependencies are ready. This gives the project a repeatable local workflow before publishing images to AWS.
 
-Follow [`terraform/README.md`](terraform/README.md) to bootstrap the remote S3 state backend, authenticate to AWS, review the dev environment plan, and provision infrastructure. Terraform provisions two private EKS worker nodes across two Availability Zones and the ECR repositories used by CI.
+Continue with the [Docker guide](docker/README.md) for environment setup, build and run commands, health checks, logs, and cleanup.
 
-### GitHub Actions CI
+### 3. AWS infrastructure with Terraform
 
-Configure the GitHub repository secrets documented in [`.github/README.md`](.github/README.md). On a pull request, the CI workflow builds and scans service images. On `main`, it additionally pushes immutable images to ECR and commits the matching image references to `kubernetes/base/`.
+Terraform provisions the cloud foundation in reusable modules: a VPC with public and private subnets, internet/NAT routing and network ACLs; an EKS cluster with two worker nodes in separate Availability Zones; ECR repositories for the service images; and the IAM permissions used by the platform. Terraform state for the dev environment is stored remotely in an S3 backend. The current design removes the Jenkins EC2 host and its Jenkins-specific provisioning.
 
-### Argo CD continuous delivery
+Continue with the [Terraform guide](terraform/README.md) for bootstrapping the S3 backend, AWS authentication, module details, plan/apply commands, verification, and safe teardown.
 
-Install Argo CD in the cluster, create the `app-secrets` Secret without committing its values, then apply [`argocd/applications/ivolve-dev.yaml`](argocd/applications/ivolve-dev.yaml). Argo CD watches the `main` branch and syncs `kubernetes/overlays/dev`; see [`argocd/README.md`](argocd/README.md) and [`kubernetes/README.md`](kubernetes/README.md).
+### 4. Kubernetes application platform
+
+The Kubernetes manifests define the `ivolve` namespace, Deployments and Services for the frontend and APIs, and a MySQL StatefulSet with a headless Service and persistent gp3 storage. A ConfigMap holds non-sensitive settings; the application Secret is created separately so credentials are not committed to Git. An Ingress and the AWS Load Balancer Controller expose the frontend through an AWS Application Load Balancer. The dev overlay collects the manifests that Argo CD reconciles.
+
+Continue with the [Kubernetes guide](kubernetes/README.md) for manifest structure, secret creation, rollout behavior, Argo CD handoff, and cluster verification.
+
+### 5. Continuous integration with GitHub Actions
+
+GitHub Actions provides CI for the microservices. The workflow builds Docker images, scans them with Trivy, and on the publishing branch pushes commit-tagged images to the project’s ECR repositories. It then updates the image references in the Kubernetes manifests in Git. The workflow does not deploy directly to the EKS API; Argo CD handles that step.
+
+Continue with the [GitHub Actions guide](.github/README.md) for workflow triggers, repository secrets, ECR permissions, scan behavior, and manifest updates.
+
+### 6. Continuous delivery with Argo CD
+
+Argo CD watches the repository’s `main` branch and the `kubernetes/overlays/dev` path. When CI commits a new image reference, Argo CD detects the Git change and reconciles the declared application resources into EKS. Its Application view reports synchronization and health, making the Git revision and deployment state visible in one place.
+
+Continue with the [Argo CD guide](argocd/README.md) for installation, Application registration, access, synchronization, and troubleshooting. The Kubernetes resource details remain in the [Kubernetes guide](kubernetes/README.md).
+
+### 7. Architecture, screenshots, and demo
+
+The documentation includes the branded architecture diagram, evidence screenshots for local Compose, successful CI, Argo CD health, EKS workloads, and the live application, plus project walkthrough videos. The evidence shows the current GitHub Actions CI → Git manifests → Argo CD CD flow.
+
+Continue with the [documentation guide](docs/README.md) to view the evidence and videos, and to find instructions for regenerating the visual assets.
 
 ## Verification evidence
 
