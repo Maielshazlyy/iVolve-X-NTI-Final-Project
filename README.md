@@ -6,7 +6,7 @@ The application includes a frontend, an authentication API, a roadmap API, and M
 
 ## Project walkthrough
 
-![](https://github.com/user-attachments/assets/15d4caff-41cf-45da-ae90-4e9e882caf9e)
+https://github.com/user-attachments/assets/15d4caff-41cf-45da-ae90-4e9e882caf9e
 
 ## Project requirements and implementation
 
