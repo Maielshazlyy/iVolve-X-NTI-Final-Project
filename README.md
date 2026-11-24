@@ -4,6 +4,12 @@ This project takes the iVolve DevOps training application from local source code
 
 The application includes a frontend, an authentication API, a roadmap API, and MySQL. The local Docker Compose stack helps develop the services together. In AWS, the services run on Amazon EKS, images are stored in Amazon ECR, MySQL uses persistent EBS storage, and an AWS Application Load Balancer exposes the frontend.
 
+## Project walkthrough
+
+[![Watch the iVolve project walkthrough](docs/demo/ivolve-devops-explainer-no-captions-cover.png)](https://raw.githubusercontent.com/Maielshazlyy/iVolve-X-NTI-Final-Project/main/docs/demo/ivolve-devops-explainer-no-captions.mp4)
+
+Select the preview to play the project walkthrough.
+
 ## Project requirements and implementation
 
 | Area | Project outcome |
@@ -81,9 +87,6 @@ Continue with the [documentation guide](docs/README.md) to view the evidence and
 
 Screenshots and the project walkthrough video are collected in [`docs/README.md`](docs/README.md). The repository includes evidence of the local Compose stack, the application through the ALB, healthy EKS nodes and workloads, successful CI runs, and successful Argo CD synchronization when available.
 
-<details>
-<summary>View project screenshots</summary>
-
 ### Local Docker Compose
 
 ![Local Docker Compose services started](docs/images/evidence/docker-compose-started.png)
@@ -103,8 +106,6 @@ Screenshots and the project walkthrough video are collected in [`docs/README.md`
 ### Application through the AWS ALB
 
 ![iVolve application served through the AWS Application Load Balancer](docs/images/evidence/application-live-on-alb.png)
-
-</details>
 
 ## Operational and security notes
 
